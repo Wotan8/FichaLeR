@@ -1200,6 +1200,7 @@
             <div class="auth-actions">
                 <button class="btn btn-primary" id="openMasterPanelBtn" style="display: none;">Abrir Painel do Mestre</button>
                 <button class="btn btn-secondary" id="changeCharacterBtn" style="display: none;">Trocar Personagem</button>
+                <button class="btn btn-primary" id="syncNowBtn">Sincronizar agora</button>
                 <button class="btn btn-secondary" id="signOutBtn">Sair</button>
             </div>
             <p class="auth-note" id="authStatusMessage"></p>
@@ -1694,6 +1695,7 @@ Exemplos:
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAIbT-RK802RW-IbQx2pA7b_T5i2cgg9rA",
@@ -1728,6 +1730,7 @@ Exemplos:
             query,
             where,
             orderBy
+            where
         };
 
         window.dispatchEvent(new Event('firebase-services-ready'));
@@ -2497,6 +2500,7 @@ Exemplos:
             if (changeCharacterBtn && !changeCharacterBtn.dataset.bound) {
                 changeCharacterBtn.addEventListener('click', async () => {
                     await forceAutoSave();
+                    await autoSave(true);
                     try {
                         await fetchUserCharacters();
                     } catch (error) {
@@ -2623,6 +2627,7 @@ Exemplos:
             const changeCharacterBtn = document.getElementById('changeCharacterBtn');
             const characterSelectionCard = document.getElementById('characterSelectionCard');
             const createCharacterBtn = document.getElementById('createCharacterBtn');
+            const syncNowBtn = document.getElementById('syncNowBtn');
 
             if (!appContainer || !authCard || !userInfoCard) return;
 
@@ -2638,6 +2643,7 @@ Exemplos:
                 if (masterTabButton) masterTabButton.style.display = isMasterUser ? 'inline-flex' : 'none';
                 if (openMasterPanelBtn) openMasterPanelBtn.style.display = isMasterUser ? 'inline-flex' : 'none';
                 if (changeCharacterBtn) changeCharacterBtn.style.display = (!isMasterUser && hasActiveCharacter) ? 'inline-flex' : 'none';
+                if (syncNowBtn) syncNowBtn.style.display = hasActiveCharacter ? 'inline-flex' : 'none';
                 if (characterSelectionCard) characterSelectionCard.style.display = (!isMasterUser && !hasActiveCharacter) ? 'flex' : 'none';
                 if (createCharacterBtn) createCharacterBtn.style.display = (!isMasterUser && !hasActiveCharacter) ? 'block' : 'none';
             } else {
@@ -2647,6 +2653,7 @@ Exemplos:
                 if (masterTabButton) masterTabButton.style.display = 'none';
                 if (openMasterPanelBtn) openMasterPanelBtn.style.display = 'none';
                 if (changeCharacterBtn) changeCharacterBtn.style.display = 'none';
+                if (syncNowBtn) syncNowBtn.style.display = 'none';
                 if (characterSelectionCard) characterSelectionCard.style.display = 'none';
                 if (createCharacterBtn) createCharacterBtn.style.display = 'none';
             }
@@ -2719,6 +2726,42 @@ Exemplos:
 
             updateAuthStatusMessage('Nenhuma ficha encontrada. Faça alterações para salvar no Firebase.', false);
             return false;
+        }
+
+        function updateUserCharacterCache(id, data, updatedAt) {
+            if (!id) return;
+
+            const nameFromData = data && data.nome ? data.nome : undefined;
+            const normalizedEntry = {
+                id,
+                name: (nameFromData || character.nome || 'Sem nome') || 'Sem nome',
+                updatedAt: updatedAt instanceof Date ? updatedAt : null
+            };
+
+        async function saveCharacterToFirestore() {
+            if (!firestore || !authUser || !window.firebaseServices || !activeCharacterId) return;
+
+            const services = window.firebaseServices;
+            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, activeCharacterId);
+            const sanitizedCharacter = sanitizeForFirestore(character);
+
+            const payload = {
+                character: sanitizedCharacter,
+                owner: {
+                    uid: authUser.uid,
+                    name: authUser.displayName || '',
+                    email: authUser.email || ''
+                },
+                characterId: activeCharacterId,
+                updatedAt: services.serverTimestamp()
+            };
+
+            updateAuthStatusMessage('Sincronizando com o Firebase...');
+            await services.setDoc(docRef, payload, { merge: true });
+            lastSyncedAt = new Date();
+            updateAuthStatusMessage(`Sincronizado em ${formatDateTime(lastSyncedAt)}.`);
+            updateUserCharacterCache(activeCharacterId, character, lastSyncedAt);
+            renderCharacterSelection();
         }
 
         function updateUserCharacterCache(id, data, updatedAt) {
@@ -3196,6 +3239,10 @@ Exemplos:
                     await setDocFn(characterRef, payload, { merge: true });
 
                     let logFailed = false;
+            const performSave = async () => {
+                const canSync = authUser && firestore && activeCharacterId;
+
+                if (canSync) {
                     try {
                         const logEntry = {
                             userId: authUser.uid,
@@ -3238,6 +3285,11 @@ Exemplos:
         function autoSave(force = false) {
             if (force) {
                 return forceAutoSave();
+                return performSave();
+            } else {
+                autoSaveTimeout = setTimeout(() => {
+                    performSave();
+                }, 500);
             }
 
             scheduleAutoSave(500);
@@ -3900,6 +3952,7 @@ Exemplos:
                     applyCharacterData(createDefaultCharacter());
                     updateActiveCharacterDisplay();
                     forceAutoSave();
+                    autoSave(true);
                     showAlert('🔄 Personagem resetado! Dados limpos no Firebase.', 'success');
                 }
             }
