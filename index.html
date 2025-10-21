@@ -1111,6 +1111,7 @@
             </p>
             <div class="auth-actions">
                 <button class="btn btn-primary" id="googleSignInBtn">Entrar com Google</button>
+                <button class="btn btn-secondary" id="masterLoginBtn">Entrar no Painel do Mestre</button>
             </div>
             <p class="auth-note">
                 Após o login, as alterações são salvas automaticamente no Firebase.
@@ -1125,6 +1126,7 @@
                 <span class="master-badge" id="masterBadge" style="display: none;">Mestre</span>
             </div>
             <div class="auth-actions">
+                <button class="btn btn-primary" id="openMasterPanelBtn" style="display: none;">Abrir Painel do Mestre</button>
                 <button class="btn btn-primary" id="syncNowBtn">Sincronizar agora</button>
                 <button class="btn btn-secondary" id="signOutBtn">Sair</button>
             </div>
@@ -1140,16 +1142,16 @@
         <div class="alert alert-danger" id="alertError"></div>
 
         <div class="tabs" id="tabContainer">
-            <button class="tab active" onclick="switchTab('basico')">📋 Básico</button>
-            <button class="tab" onclick="switchTab('atributos')">💪 Atributos</button>
-            <button class="tab" onclick="switchTab('habilidades')">🎯 Habilidades</button>
-            <button class="tab" onclick="switchTab('caracteristicas')">📊 Stats</button>
-            <button class="tab" onclick="switchTab('classe')">⭐ Classe</button>
-            <button class="tab" onclick="switchTab('combate')">⚔️ Combate</button>
-            <button class="tab" onclick="switchTab('inventario')">🎒 Inventário</button>
-            <button class="tab" onclick="switchTab('notas')">📝 Notas</button>
-            <button class="tab" onclick="switchTab('evolucao')">⭐ EXP</button>
-            <button class="tab" id="masterTabButton" style="display: none;" onclick="switchTab('mestre')">🧙‍♂️ Mestre</button>
+            <button class="tab active" onclick="switchTab('basico', this)">📋 Básico</button>
+            <button class="tab" onclick="switchTab('atributos', this)">💪 Atributos</button>
+            <button class="tab" onclick="switchTab('habilidades', this)">🎯 Habilidades</button>
+            <button class="tab" onclick="switchTab('caracteristicas', this)">📊 Stats</button>
+            <button class="tab" onclick="switchTab('classe', this)">⭐ Classe</button>
+            <button class="tab" onclick="switchTab('combate', this)">⚔️ Combate</button>
+            <button class="tab" onclick="switchTab('inventario', this)">🎒 Inventário</button>
+            <button class="tab" onclick="switchTab('notas', this)">📝 Notas</button>
+            <button class="tab" onclick="switchTab('evolucao', this)">⭐ EXP</button>
+            <button class="tab" id="masterTabButton" style="display: none;" onclick="switchTab('mestre', this)">🧙‍♂️ Mestre</button>
         </div>
 
         <!-- ABA BÁSICO -->
@@ -1651,6 +1653,7 @@ Exemplos:
         let masterUnsubscribe = null;
         let lastSyncedAt = null;
         let localBackupData = null;
+        let shouldOpenMasterAfterLogin = false;
 
         // ============= DADOS DO SISTEMA =============
         const SKILLS = {
@@ -2373,6 +2376,12 @@ Exemplos:
                 signInBtn.dataset.bound = 'true';
             }
 
+            const masterLoginBtn = document.getElementById('masterLoginBtn');
+            if (masterLoginBtn && !masterLoginBtn.dataset.bound) {
+                masterLoginBtn.addEventListener('click', () => handleSignIn(services, true));
+                masterLoginBtn.dataset.bound = 'true';
+            }
+
             const signOutBtn = document.getElementById('signOutBtn');
             if (signOutBtn && !signOutBtn.dataset.bound) {
                 signOutBtn.addEventListener('click', () => handleSignOut(services));
@@ -2385,11 +2394,24 @@ Exemplos:
                 syncNowBtn.dataset.bound = 'true';
             }
 
+            const openMasterPanelBtn = document.getElementById('openMasterPanelBtn');
+            if (openMasterPanelBtn && !openMasterPanelBtn.dataset.bound) {
+                openMasterPanelBtn.addEventListener('click', () => {
+                    const masterTabButton = document.getElementById('masterTabButton');
+                    if (masterTabButton) {
+                        switchTab('mestre', masterTabButton);
+                        masterTabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                });
+                openMasterPanelBtn.dataset.bound = 'true';
+            }
+
             services.onAuthStateChanged(firebaseAuth, handleAuthStateChange);
             updateAuthUI();
         }
 
-        async function handleSignIn(services) {
+        async function handleSignIn(services, goToMaster = false) {
+            shouldOpenMasterAfterLogin = goToMaster;
             try {
                 const provider = new services.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
@@ -2421,6 +2443,7 @@ Exemplos:
                 resetTabsAfterLogout();
                 updateAuthUI();
                 updateAuthStatusMessage('Entre para sincronizar sua ficha.', false);
+                shouldOpenMasterAfterLogin = false;
                 return;
             }
 
@@ -2439,9 +2462,18 @@ Exemplos:
 
             if (isMasterUser) {
                 setupMasterSubscription();
+                if (shouldOpenMasterAfterLogin) {
+                    const masterTabButton = document.getElementById('masterTabButton');
+                    if (masterTabButton) {
+                        switchTab('mestre', masterTabButton);
+                        masterTabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }
             } else {
                 cleanupMasterSubscription();
             }
+
+            shouldOpenMasterAfterLogin = false;
         }
 
         function updateAuthUI() {
@@ -2452,6 +2484,7 @@ Exemplos:
             const userEmailEl = document.getElementById('userEmail');
             const masterBadge = document.getElementById('masterBadge');
             const masterTabButton = document.getElementById('masterTabButton');
+            const openMasterPanelBtn = document.getElementById('openMasterPanelBtn');
 
             if (!appContainer || !authCard || !userInfoCard) return;
 
@@ -2463,12 +2496,18 @@ Exemplos:
                 userEmailEl.textContent = authUser.email || '';
                 masterBadge.style.display = isMasterUser ? 'inline-flex' : 'none';
                 masterTabButton.style.display = isMasterUser ? 'inline-flex' : 'none';
+                if (openMasterPanelBtn) {
+                    openMasterPanelBtn.style.display = isMasterUser ? 'inline-flex' : 'none';
+                }
             } else {
                 appContainer.style.display = 'none';
                 authCard.style.display = 'block';
                 userInfoCard.style.display = 'none';
                 masterBadge.style.display = 'none';
                 masterTabButton.style.display = 'none';
+                if (openMasterPanelBtn) {
+                    openMasterPanelBtn.style.display = 'none';
+                }
             }
 
             if (!isMasterUser) {
@@ -2483,6 +2522,29 @@ Exemplos:
             if (!statusEl) return;
             statusEl.textContent = message || '';
             statusEl.style.color = isError ? 'var(--danger)' : '#94a3b8';
+        }
+
+        function sanitizeForFirestore(value) {
+            if (Array.isArray(value)) {
+                return value.map(item => sanitizeForFirestore(item === undefined ? null : item));
+            }
+
+            if (value && typeof value === 'object') {
+                return Object.entries(value).reduce((acc, [key, val]) => {
+                    if (val === undefined) {
+                        acc[key] = null;
+                    } else {
+                        acc[key] = sanitizeForFirestore(val);
+                    }
+                    return acc;
+                }, {});
+            }
+
+            if (typeof value === 'number' && !Number.isFinite(value)) {
+                return 0;
+            }
+
+            return value;
         }
 
         async function loadCharacterFromFirestore() {
@@ -2520,9 +2582,10 @@ Exemplos:
 
             const services = window.firebaseServices;
             const docRef = services.doc(firestore, FIRESTORE_COLLECTION, authUser.uid);
+            const sanitizedCharacter = sanitizeForFirestore(character);
 
             const payload = {
-                character,
+                character: sanitizedCharacter,
                 owner: {
                     uid: authUser.uid,
                     name: authUser.displayName || '',
@@ -2531,8 +2594,10 @@ Exemplos:
                 updatedAt: services.serverTimestamp()
             };
 
+            updateAuthStatusMessage('Sincronizando com o Firebase...');
             await services.setDoc(docRef, payload, { merge: true });
             lastSyncedAt = new Date();
+            localBackupData = JSON.parse(JSON.stringify(character));
             updateAuthStatusMessage(`Sincronizado em ${formatDateTime(lastSyncedAt)}.`);
         }
 
@@ -2673,8 +2738,9 @@ Exemplos:
 
             const performSave = async () => {
                 try {
-                    localStorage.setItem('lendasReliquia_character', JSON.stringify(character));
-                    localBackupData = JSON.parse(JSON.stringify(character));
+                    const sanitizedCharacter = sanitizeForFirestore(character);
+                    localStorage.setItem('lendasReliquia_character', JSON.stringify(sanitizedCharacter));
+                    localBackupData = JSON.parse(JSON.stringify(sanitizedCharacter));
                 } catch (error) {
                     console.error('Erro ao salvar localmente:', error);
                 }
@@ -3234,21 +3300,27 @@ Exemplos:
         }
 
         // ============= TABS =============
-        function switchTab(tabName) {
+        function switchTab(tabName, triggerElement = null) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            const targetTab = document.querySelector(`.tab-content[id="${tabName}"]`);
-            
+
+            const targetTab = document.getElementById(tabName);
+
             if (!targetTab) {
                 console.error('❌ Aba não encontrada:', tabName);
                 return;
             }
-            
-            event.target.classList.add('active');
+
+            const tabButton = triggerElement || document.querySelector(`.tab[onclick*="${tabName}"]`);
+
+            if (tabButton) {
+                tabButton.classList.add('active');
+                if (typeof tabButton.scrollIntoView === 'function') {
+                    tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            }
+
             targetTab.classList.add('active');
-            
-            event.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
         // ============= CARREGAR DADOS =============
