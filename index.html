@@ -111,6 +111,55 @@
             color: var(--primary);
         }
 
+        .character-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .character-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .character-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            gap: 12px;
+        }
+
+        .character-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .character-name {
+            font-weight: 700;
+            color: #e2e8f0;
+            font-size: clamp(0.95rem, 3vw, 1.05rem);
+        }
+
+        .character-meta {
+            font-size: clamp(0.75rem, 2.3vw, 0.85rem);
+            color: #94a3b8;
+        }
+
+        .character-empty {
+            text-align: center;
+            padding: 20px;
+            border: 1px dashed rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            color: #94a3b8;
+            font-size: clamp(0.8rem, 2.3vw, 0.9rem);
+        }
+
         .auth-note {
             font-size: clamp(0.75rem, 2.5vw, 0.85rem);
             color: #94a3b8;
@@ -1125,12 +1174,22 @@
                 </div>
                 <span class="master-badge" id="masterBadge" style="display: none;">Mestre</span>
             </div>
+            <p class="auth-note" id="activeCharacterLabel" style="display: none;">
+                Personagem ativo: <strong id="activeCharacterName"></strong>
+            </p>
             <div class="auth-actions">
                 <button class="btn btn-primary" id="openMasterPanelBtn" style="display: none;">Abrir Painel do Mestre</button>
+                <button class="btn btn-secondary" id="changeCharacterBtn" style="display: none;">Trocar Personagem</button>
                 <button class="btn btn-primary" id="syncNowBtn">Sincronizar agora</button>
                 <button class="btn btn-secondary" id="signOutBtn">Sair</button>
             </div>
             <p class="auth-note" id="authStatusMessage"></p>
+        </div>
+        <div class="auth-card character-selection" id="characterSelectionCard" style="display: none;">
+            <h2>🎲 Seus Personagens</h2>
+            <p class="auth-note">Escolha um personagem existente ou crie um novo para começar.</p>
+            <div class="character-list" id="characterList"></div>
+            <button class="btn btn-primary" id="createCharacterBtn" style="display: none;">➕ Criar novo personagem</button>
         </div>
     </div>
 
@@ -1606,7 +1665,7 @@ Exemplos:
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAIbT-RK802RW-IbQx2pA7b_T5i2cgg9rA",
@@ -1635,7 +1694,11 @@ Exemplos:
             setDoc,
             collection,
             onSnapshot,
-            serverTimestamp
+            serverTimestamp,
+            addDoc,
+            getDocs,
+            query,
+            where
         };
 
         window.dispatchEvent(new Event('firebase-services-ready'));
@@ -1643,7 +1706,7 @@ Exemplos:
 
     <script>
         // ============= CONFIGURAÇÕES =============
-        const MASTER_EMAILS = ['mestre@exemplo.com']; // Atualize com os e-mails que terão acesso ao painel do mestre
+        const MASTER_PASSWORD = 'mestresoberano@123';
         const FIRESTORE_COLLECTION = 'characters';
 
         let firebaseAuth = null;
@@ -1652,7 +1715,9 @@ Exemplos:
         let isMasterUser = false;
         let masterUnsubscribe = null;
         let lastSyncedAt = null;
-        let localBackupData = null;
+        let userCharacters = [];
+        let activeCharacterId = null;
+        let masterPasswordVerified = false;
         let shouldOpenMasterAfterLogin = false;
 
         // ============= DADOS DO SISTEMA =============
@@ -2197,6 +2262,7 @@ Exemplos:
             updateAllCalculations();
             updateClassTests();
             updateClassResourcesDisplay();
+            updateActiveCharacterDisplay();
         }
 
         // ============= FUNÇÃO PARA FORÇAR CARREGAMENTO DA CLASSE =============
@@ -2334,18 +2400,8 @@ Exemplos:
             createSkills();
             setupEventListeners();
 
-            try {
-                const saved = localStorage.getItem('lendasReliquia_character');
-                if (saved) {
-                    localBackupData = JSON.parse(saved);
-                    applyCharacterData(localBackupData);
-                } else {
-                    applyCharacterData(createDefaultCharacter());
-                }
-            } catch (error) {
-                console.error('Erro ao carregar dados locais:', error);
-                applyCharacterData(createDefaultCharacter());
-            }
+            applyCharacterData(createDefaultCharacter());
+            updateAuthStatusMessage('Entre para sincronizar sua ficha.', false);
 
             initializeFirebaseIntegration();
         }
@@ -2406,12 +2462,51 @@ Exemplos:
                 openMasterPanelBtn.dataset.bound = 'true';
             }
 
+            const createCharacterBtn = document.getElementById('createCharacterBtn');
+            if (createCharacterBtn && !createCharacterBtn.dataset.bound) {
+                createCharacterBtn.addEventListener('click', () => createNewCharacter());
+                createCharacterBtn.dataset.bound = 'true';
+            }
+
+            const changeCharacterBtn = document.getElementById('changeCharacterBtn');
+            if (changeCharacterBtn && !changeCharacterBtn.dataset.bound) {
+                changeCharacterBtn.addEventListener('click', async () => {
+                    await autoSave(true);
+                    try {
+                        await fetchUserCharacters();
+                    } catch (error) {
+                        console.error('Erro ao atualizar a lista de personagens:', error);
+                    }
+                    showCharacterSelection();
+                });
+                changeCharacterBtn.dataset.bound = 'true';
+            }
+
             services.onAuthStateChanged(firebaseAuth, handleAuthStateChange);
             updateAuthUI();
         }
 
         async function handleSignIn(services, goToMaster = false) {
-            shouldOpenMasterAfterLogin = goToMaster;
+            if (goToMaster) {
+                const password = prompt('Digite a senha do mestre para continuar:');
+                if (password === null) {
+                    updateAuthStatusMessage('Login do mestre cancelado.', false);
+                    return;
+                }
+
+                if (password !== MASTER_PASSWORD) {
+                    masterPasswordVerified = false;
+                    updateAuthStatusMessage('Senha do mestre incorreta.', true);
+                    return;
+                }
+
+                masterPasswordVerified = true;
+                shouldOpenMasterAfterLogin = true;
+            } else {
+                masterPasswordVerified = false;
+                shouldOpenMasterAfterLogin = false;
+            }
+
             try {
                 const provider = new services.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
@@ -2419,6 +2514,10 @@ Exemplos:
                 updateAuthStatusMessage('Login realizado com sucesso!');
             } catch (error) {
                 console.error('Erro no processo de login:', error);
+                if (goToMaster) {
+                    masterPasswordVerified = false;
+                    shouldOpenMasterAfterLogin = false;
+                }
                 updateAuthStatusMessage('Não foi possível concluir o login. Verifique as credenciais do Firebase.', true);
             }
         }
@@ -2426,6 +2525,7 @@ Exemplos:
         async function handleSignOut(services) {
             try {
                 await services.signOut(firebaseAuth);
+                masterPasswordVerified = false;
                 updateAuthStatusMessage('Você saiu da conta.');
             } catch (error) {
                 console.error('Erro ao sair da conta:', error);
@@ -2435,12 +2535,17 @@ Exemplos:
 
         async function handleAuthStateChange(user) {
             authUser = user;
-            const normalizedMasters = MASTER_EMAILS.map(email => email.toLowerCase().trim());
-            isMasterUser = !!user && normalizedMasters.includes((user?.email || '').toLowerCase());
+            isMasterUser = !!user && masterPasswordVerified;
 
             if (!user) {
                 cleanupMasterSubscription();
                 resetTabsAfterLogout();
+                userCharacters = [];
+                activeCharacterId = null;
+                masterPasswordVerified = false;
+                lastSyncedAt = null;
+                updateActiveCharacterDisplay();
+                renderCharacterSelection();
                 updateAuthUI();
                 updateAuthStatusMessage('Entre para sincronizar sua ficha.', false);
                 shouldOpenMasterAfterLogin = false;
@@ -2449,19 +2554,9 @@ Exemplos:
 
             updateAuthUI();
 
-            try {
-                const hasRemoteData = await loadCharacterFromFirestore();
-                if (!hasRemoteData) {
-                    await saveCharacterToFirestore();
-                    updateAuthStatusMessage('Primeira sincronização concluída.');
-                }
-            } catch (error) {
-                console.error('Erro ao sincronizar com o Firebase:', error);
-                updateAuthStatusMessage('Não foi possível carregar os dados do Firebase.', true);
-            }
-
             if (isMasterUser) {
                 setupMasterSubscription();
+                updateAuthStatusMessage('Painel do mestre ativo.');
                 if (shouldOpenMasterAfterLogin) {
                     const masterTabButton = document.getElementById('masterTabButton');
                     if (masterTabButton) {
@@ -2469,11 +2564,23 @@ Exemplos:
                         masterTabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                     }
                 }
-            } else {
-                cleanupMasterSubscription();
+                shouldOpenMasterAfterLogin = false;
+                return;
             }
 
+            cleanupMasterSubscription();
             shouldOpenMasterAfterLogin = false;
+            activeCharacterId = null;
+            lastSyncedAt = null;
+            updateActiveCharacterDisplay();
+
+            try {
+                await fetchUserCharacters();
+                updateAuthUI();
+            } catch (error) {
+                console.error('Erro ao carregar personagens do jogador:', error);
+                updateAuthStatusMessage('Não foi possível carregar seus personagens.', true);
+            }
         }
 
         function updateAuthUI() {
@@ -2485,36 +2592,49 @@ Exemplos:
             const masterBadge = document.getElementById('masterBadge');
             const masterTabButton = document.getElementById('masterTabButton');
             const openMasterPanelBtn = document.getElementById('openMasterPanelBtn');
+            const changeCharacterBtn = document.getElementById('changeCharacterBtn');
+            const characterSelectionCard = document.getElementById('characterSelectionCard');
+            const createCharacterBtn = document.getElementById('createCharacterBtn');
+            const syncNowBtn = document.getElementById('syncNowBtn');
 
             if (!appContainer || !authCard || !userInfoCard) return;
 
+            const hasActiveCharacter = !!activeCharacterId;
+            const showApp = !!authUser && (isMasterUser || hasActiveCharacter);
+
             if (authUser) {
-                appContainer.style.display = 'block';
                 authCard.style.display = 'none';
                 userInfoCard.style.display = 'flex';
-                userNameEl.textContent = authUser.displayName || 'Jogador';
-                userEmailEl.textContent = authUser.email || '';
-                masterBadge.style.display = isMasterUser ? 'inline-flex' : 'none';
-                masterTabButton.style.display = isMasterUser ? 'inline-flex' : 'none';
-                if (openMasterPanelBtn) {
-                    openMasterPanelBtn.style.display = isMasterUser ? 'inline-flex' : 'none';
-                }
+                if (userNameEl) userNameEl.textContent = authUser.displayName || 'Jogador';
+                if (userEmailEl) userEmailEl.textContent = authUser.email || '';
+                if (masterBadge) masterBadge.style.display = isMasterUser ? 'inline-flex' : 'none';
+                if (masterTabButton) masterTabButton.style.display = isMasterUser ? 'inline-flex' : 'none';
+                if (openMasterPanelBtn) openMasterPanelBtn.style.display = isMasterUser ? 'inline-flex' : 'none';
+                if (changeCharacterBtn) changeCharacterBtn.style.display = (!isMasterUser && hasActiveCharacter) ? 'inline-flex' : 'none';
+                if (syncNowBtn) syncNowBtn.style.display = hasActiveCharacter ? 'inline-flex' : 'none';
+                if (characterSelectionCard) characterSelectionCard.style.display = (!isMasterUser && !hasActiveCharacter) ? 'flex' : 'none';
+                if (createCharacterBtn) createCharacterBtn.style.display = (!isMasterUser && !hasActiveCharacter) ? 'block' : 'none';
             } else {
-                appContainer.style.display = 'none';
                 authCard.style.display = 'block';
                 userInfoCard.style.display = 'none';
-                masterBadge.style.display = 'none';
-                masterTabButton.style.display = 'none';
-                if (openMasterPanelBtn) {
-                    openMasterPanelBtn.style.display = 'none';
-                }
+                if (masterBadge) masterBadge.style.display = 'none';
+                if (masterTabButton) masterTabButton.style.display = 'none';
+                if (openMasterPanelBtn) openMasterPanelBtn.style.display = 'none';
+                if (changeCharacterBtn) changeCharacterBtn.style.display = 'none';
+                if (syncNowBtn) syncNowBtn.style.display = 'none';
+                if (characterSelectionCard) characterSelectionCard.style.display = 'none';
+                if (createCharacterBtn) createCharacterBtn.style.display = 'none';
             }
 
-            if (!isMasterUser) {
+            appContainer.style.display = showApp ? 'block' : 'none';
+
+            if (!isMasterUser && masterTabButton) {
                 masterTabButton.classList.remove('active');
                 const masterContent = document.getElementById('mestre');
                 if (masterContent) masterContent.classList.remove('active');
             }
+
+            updateActiveCharacterDisplay();
         }
 
         function updateAuthStatusMessage(message, isError = false) {
@@ -2548,10 +2668,10 @@ Exemplos:
         }
 
         async function loadCharacterFromFirestore() {
-            if (!firestore || !authUser || !window.firebaseServices) return false;
+            if (!firestore || !authUser || !window.firebaseServices || !activeCharacterId) return false;
 
             const services = window.firebaseServices;
-            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, authUser.uid);
+            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, activeCharacterId);
             const snapshot = await services.getDoc(docRef);
 
             if (snapshot.exists()) {
@@ -2559,29 +2679,28 @@ Exemplos:
                 const characterData = data.character || data;
                 applyCharacterData(characterData);
 
-                try {
-                    localStorage.setItem('lendasReliquia_character', JSON.stringify(character));
-                    localBackupData = JSON.parse(JSON.stringify(character));
-                } catch (storageError) {
-                    console.error('Erro ao atualizar o backup local:', storageError);
+                const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : null;
+                if (updatedAt) {
+                    lastSyncedAt = updatedAt;
+                    updateAuthStatusMessage(`Ficha carregada do Firebase em ${formatDateTime(updatedAt)}.`);
+                } else {
+                    updateAuthStatusMessage('Ficha carregada do Firebase.');
                 }
 
-                if (data.updatedAt?.toDate) {
-                    lastSyncedAt = data.updatedAt.toDate();
-                    updateAuthStatusMessage(`Ficha carregada do Firebase em ${formatDateTime(lastSyncedAt)}.`);
-                }
-
+                updateUserCharacterCache(activeCharacterId, characterData, updatedAt);
+                renderCharacterSelection();
                 return true;
             }
 
+            updateAuthStatusMessage('Nenhuma ficha encontrada. Faça alterações para salvar no Firebase.', false);
             return false;
         }
 
         async function saveCharacterToFirestore() {
-            if (!firestore || !authUser || !window.firebaseServices) return;
+            if (!firestore || !authUser || !window.firebaseServices || !activeCharacterId) return;
 
             const services = window.firebaseServices;
-            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, authUser.uid);
+            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, activeCharacterId);
             const sanitizedCharacter = sanitizeForFirestore(character);
 
             const payload = {
@@ -2591,14 +2710,220 @@ Exemplos:
                     name: authUser.displayName || '',
                     email: authUser.email || ''
                 },
+                characterId: activeCharacterId,
                 updatedAt: services.serverTimestamp()
             };
 
             updateAuthStatusMessage('Sincronizando com o Firebase...');
             await services.setDoc(docRef, payload, { merge: true });
             lastSyncedAt = new Date();
-            localBackupData = JSON.parse(JSON.stringify(character));
             updateAuthStatusMessage(`Sincronizado em ${formatDateTime(lastSyncedAt)}.`);
+            updateUserCharacterCache(activeCharacterId, character, lastSyncedAt);
+            renderCharacterSelection();
+        }
+
+        function updateUserCharacterCache(id, data, updatedAt) {
+            if (!id) return;
+
+            const nameFromData = data && data.nome ? data.nome : undefined;
+            const normalizedEntry = {
+                id,
+                name: (nameFromData || character.nome || 'Sem nome') || 'Sem nome',
+                updatedAt: updatedAt instanceof Date ? updatedAt : null
+            };
+
+            const existingIndex = userCharacters.findIndex(item => item.id === id);
+            if (existingIndex >= 0) {
+                userCharacters[existingIndex] = {
+                    ...userCharacters[existingIndex],
+                    ...normalizedEntry
+                };
+            } else {
+                userCharacters.push(normalizedEntry);
+            }
+        }
+
+        async function fetchUserCharacters() {
+            if (!firestore || !authUser || !window.firebaseServices) {
+                userCharacters = [];
+                renderCharacterSelection();
+                return;
+            }
+
+            const services = window.firebaseServices;
+
+            try {
+                const collectionRef = services.collection(firestore, FIRESTORE_COLLECTION);
+                const userQuery = services.query(collectionRef, services.where('owner.uid', '==', authUser.uid));
+                const snapshot = await services.getDocs(userQuery);
+
+                userCharacters = snapshot.docs.map(docSnap => {
+                    const data = docSnap.data() || {};
+                    const charData = data.character || {};
+                    return {
+                        id: docSnap.id,
+                        name: charData.nome || 'Sem nome',
+                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null
+                    };
+                });
+
+                userCharacters.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+            } catch (error) {
+                console.error('Erro ao carregar personagens do jogador:', error);
+                userCharacters = [];
+                renderCharacterSelection();
+                throw error;
+            }
+
+            renderCharacterSelection();
+
+            if (userCharacters.length === 0) {
+                updateAuthStatusMessage('Nenhum personagem encontrado. Crie um novo para começar.');
+            } else {
+                updateAuthStatusMessage('Selecione um personagem para continuar.');
+            }
+        }
+
+        function renderCharacterSelection() {
+            const listEl = document.getElementById('characterList');
+            if (!listEl) return;
+
+            if (!authUser || isMasterUser) {
+                listEl.innerHTML = '';
+                return;
+            }
+
+            if (!userCharacters.length) {
+                listEl.innerHTML = '<div class="character-empty">Nenhum personagem encontrado.</div>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+
+            const sorted = [...userCharacters].sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+
+            sorted.forEach(characterInfo => {
+                const item = document.createElement('div');
+                item.className = 'character-item';
+
+                const info = document.createElement('div');
+                info.className = 'character-info';
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'character-name';
+                nameEl.textContent = characterInfo.name || 'Sem nome';
+
+                const metaEl = document.createElement('div');
+                metaEl.className = 'character-meta';
+                metaEl.textContent = characterInfo.updatedAt
+                    ? `Atualizado em ${formatDateTime(characterInfo.updatedAt)}`
+                    : 'Nunca sincronizado';
+
+                info.appendChild(nameEl);
+                info.appendChild(metaEl);
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = 'btn btn-primary btn-small';
+                actionBtn.textContent = 'Selecionar';
+                actionBtn.addEventListener('click', () => selectCharacter(characterInfo.id));
+
+                item.appendChild(info);
+                item.appendChild(actionBtn);
+
+                listEl.appendChild(item);
+            });
+        }
+
+        async function selectCharacter(characterId) {
+            if (!characterId) return;
+
+            activeCharacterId = characterId;
+            updateAuthUI();
+            updateAuthStatusMessage('Carregando personagem selecionado...');
+
+            try {
+                const loaded = await loadCharacterFromFirestore();
+                if (!loaded) {
+                    applyCharacterData(createDefaultCharacter());
+                    updateAuthStatusMessage('Novo personagem em branco pronto para edição.');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar o personagem selecionado:', error);
+                updateAuthStatusMessage('Não foi possível carregar o personagem selecionado.', true);
+            }
+
+            updateActiveCharacterDisplay();
+            updateAuthUI();
+        }
+
+        async function createNewCharacter() {
+            if (!authUser || !firestore || !window.firebaseServices) {
+                updateAuthStatusMessage('Faça login para criar personagens.', true);
+                return;
+            }
+
+            const nameInput = prompt('Nome do novo personagem:');
+            if (nameInput === null) {
+                return;
+            }
+
+            const baseCharacter = createDefaultCharacter();
+            baseCharacter.nome = nameInput.trim() || 'Novo Personagem';
+
+            try {
+                const services = window.firebaseServices;
+                const collectionRef = services.collection(firestore, FIRESTORE_COLLECTION);
+                const payload = {
+                    character: sanitizeForFirestore(baseCharacter),
+                    owner: {
+                        uid: authUser.uid,
+                        name: authUser.displayName || '',
+                        email: authUser.email || ''
+                    },
+                    createdAt: services.serverTimestamp(),
+                    updatedAt: services.serverTimestamp()
+                };
+
+                const docRef = await services.addDoc(collectionRef, payload);
+                await services.setDoc(services.doc(firestore, FIRESTORE_COLLECTION, docRef.id), {
+                    characterId: docRef.id
+                }, { merge: true });
+
+                activeCharacterId = docRef.id;
+                applyCharacterData(baseCharacter);
+                updateUserCharacterCache(activeCharacterId, baseCharacter, new Date());
+                renderCharacterSelection();
+                updateAuthUI();
+                updateAuthStatusMessage('Novo personagem criado! Todas as alterações serão sincronizadas automaticamente.');
+                showAlert('✅ Novo personagem criado!', 'success');
+            } catch (error) {
+                console.error('Erro ao criar novo personagem:', error);
+                updateAuthStatusMessage('Não foi possível criar o personagem. Tente novamente.', true);
+            }
+        }
+
+        function showCharacterSelection() {
+            if (!authUser || isMasterUser) return;
+            updateAuthStatusMessage('Selecione um personagem para continuar.');
+            activeCharacterId = null;
+            updateActiveCharacterDisplay();
+            updateAuthUI();
+        }
+
+        function updateActiveCharacterDisplay() {
+            const label = document.getElementById('activeCharacterLabel');
+            const nameEl = document.getElementById('activeCharacterName');
+
+            if (!label || !nameEl) return;
+
+            if (authUser && activeCharacterId) {
+                const displayName = character.nome && character.nome.trim() ? character.nome.trim() : 'Sem nome';
+                nameEl.textContent = displayName;
+                label.style.display = 'block';
+            } else {
+                nameEl.textContent = '';
+                label.style.display = 'none';
+            }
         }
 
         function setupMasterSubscription() {
@@ -2713,10 +3038,17 @@ Exemplos:
             Object.entries(inputs).forEach(([id, key]) => {
                 const el = document.getElementById(id);
                 el.addEventListener('change', (e) => {
-                    character[key] = ['idade', 'tamanho', 'luns'].includes(key) 
-                        ? parseInt(e.target.value) || 0 
+                    character[key] = ['idade', 'tamanho', 'luns'].includes(key)
+                        ? parseInt(e.target.value) || 0
                         : e.target.value;
                     if (key === 'tamanho') updateAllCalculations();
+                    if (key === 'nome') {
+                        updateActiveCharacterDisplay();
+                        if (activeCharacterId) {
+                            updateUserCharacterCache(activeCharacterId, character, lastSyncedAt);
+                            renderCharacterSelection();
+                        }
+                    }
                     autoSave();
                 });
             });
@@ -2737,15 +3069,9 @@ Exemplos:
             }
 
             const performSave = async () => {
-                try {
-                    const sanitizedCharacter = sanitizeForFirestore(character);
-                    localStorage.setItem('lendasReliquia_character', JSON.stringify(sanitizedCharacter));
-                    localBackupData = JSON.parse(JSON.stringify(sanitizedCharacter));
-                } catch (error) {
-                    console.error('Erro ao salvar localmente:', error);
-                }
+                const canSync = authUser && firestore && activeCharacterId;
 
-                if (authUser && firestore) {
+                if (canSync) {
                     try {
                         await saveCharacterToFirestore();
                     } catch (error) {
@@ -2760,7 +3086,7 @@ Exemplos:
             };
 
             if (force) {
-                performSave();
+                return performSave();
             } else {
                 autoSaveTimeout = setTimeout(() => {
                     performSave();
@@ -3387,11 +3713,18 @@ Exemplos:
         }
 
         function resetCharacter() {
+            if (!authUser || !activeCharacterId) {
+                showAlert('Faça login e selecione um personagem antes de iniciar um novo.', 'danger');
+                updateAuthStatusMessage('Entre e escolha um personagem para salvar na nuvem.', true);
+                return;
+            }
+
             if (confirm('⚠️ ATENÇÃO! Criar um novo personagem irá APAGAR o personagem atual permanentemente. Deseja continuar?')) {
                 if (confirm('⚠️ ÚLTIMA CONFIRMAÇÃO! Todos os dados serão perdidos. Tem certeza ABSOLUTA?')) {
-                    localStorage.removeItem('lendasReliquia_character');
-                    showAlert('🔄 Personagem resetado! Recarregando...', 'success');
-                    setTimeout(() => location.reload(), 1500);
+                    applyCharacterData(createDefaultCharacter());
+                    updateActiveCharacterDisplay();
+                    autoSave(true);
+                    showAlert('🔄 Personagem resetado! Dados limpos no Firebase.', 'success');
                 }
             }
         }
