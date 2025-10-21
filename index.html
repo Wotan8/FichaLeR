@@ -1179,8 +1179,8 @@
                 Use sua conta Google para salvar a ficha na nuvem e acessar de qualquer lugar.
             </p>
             <div class="auth-actions">
-                <button class="btn btn-primary" id="loginBtn">Entrar com Google</button>
-                <button class="btn btn-secondary" id="masterLoginBtn">Entrar no Painel do Mestre</button>
+                <button class="btn btn-primary" id="loginBtn" type="button">Entrar com Google</button>
+                <button class="btn btn-secondary" id="masterLoginBtn" type="button">Entrar no Painel do Mestre</button>
             </div>
             <p class="auth-note">
                 Após o login, as alterações são salvas automaticamente no Firebase.
@@ -1198,9 +1198,9 @@
                 Personagem ativo: <strong id="activeCharacterName"></strong>
             </p>
             <div class="auth-actions">
-                <button class="btn btn-primary" id="openMasterPanelBtn" style="display: none;">Abrir Painel do Mestre</button>
-                <button class="btn btn-secondary" id="changeCharacterBtn" style="display: none;">Trocar Personagem</button>
-                <button class="btn btn-secondary" id="signOutBtn">Sair</button>
+                <button class="btn btn-primary" id="openMasterPanelBtn" style="display: none;" type="button">Abrir Painel do Mestre</button>
+                <button class="btn btn-secondary" id="changeCharacterBtn" style="display: none;" type="button">Trocar Personagem</button>
+                <button class="btn btn-secondary" id="signOutBtn" type="button">Sair</button>
             </div>
             <p class="auth-note" id="authStatusMessage"></p>
         </div>
@@ -1740,6 +1740,7 @@ Exemplos:
 
         let firebaseAuth = null;
         let firestore = null;
+        let firebaseConfigured = false;
         let authUser = null;
         let isMasterUser = false;
         let masterUnsubscribe = null;
@@ -2440,12 +2441,13 @@ Exemplos:
         function initializeFirebaseIntegration() {
             if (window.firebaseServices) {
                 configureFirebaseServices(window.firebaseServices);
-            } else {
-                updateAuthStatusMessage('Carregando serviços do Firebase...', false);
-                window.addEventListener('firebase-services-ready', () => {
-                    configureFirebaseServices(window.firebaseServices);
-                }, { once: true });
+                return;
             }
+
+            updateAuthStatusMessage('Carregando serviços do Firebase...', false);
+            window.addEventListener('firebase-services-ready', () => {
+                configureFirebaseServices(window.firebaseServices);
+            }, { once: true });
         }
 
         function configureFirebaseServices(services) {
@@ -2454,9 +2456,22 @@ Exemplos:
                 return;
             }
 
+            if (firebaseConfigured && firebaseAuth === services.auth && firestore === services.db) {
+                bindAuthButtons(services);
+                return;
+            }
+
             firebaseAuth = services.auth;
             firestore = services.db;
+            firebaseConfigured = true;
 
+            bindAuthButtons(services);
+
+            services.onAuthStateChanged(firebaseAuth, handleAuthStateChange);
+            updateAuthUI();
+        }
+
+        function bindAuthButtons(services) {
             const signInBtn = document.getElementById('loginBtn') || document.getElementById('googleSignInBtn');
             if (signInBtn && !signInBtn.dataset.bound) {
                 signInBtn.addEventListener('click', () => handleSignIn(services));
@@ -2506,12 +2521,14 @@ Exemplos:
                 });
                 changeCharacterBtn.dataset.bound = 'true';
             }
-
-            services.onAuthStateChanged(firebaseAuth, handleAuthStateChange);
-            updateAuthUI();
         }
 
         async function handleSignIn(services, goToMaster = false) {
+            if (!firebaseAuth || !services?.signInWithPopup || !services?.GoogleAuthProvider) {
+                updateAuthStatusMessage('Serviços de autenticação ainda não estão prontos. Aguarde um instante e tente novamente.', true);
+                return;
+            }
+
             if (goToMaster) {
                 const password = prompt('Digite a senha do mestre para continuar:');
                 if (password === null) {
@@ -3920,7 +3937,7 @@ Exemplos:
         }
 
         // ============= INICIAR =============
-        window.onload = init;
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>
