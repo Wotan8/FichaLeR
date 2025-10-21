@@ -213,9 +213,29 @@
             box-shadow: 0 6px 16px rgba(250, 204, 21, 0.3);
         }
 
+        .master-panel-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        @media (min-width: 1024px) {
+            .master-panel-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         .master-list {
             display: grid;
             gap: 12px;
+        }
+
+        .master-subheading {
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            color: #cbd5f5;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .master-card {
@@ -1650,7 +1670,16 @@ Exemplos:
                 <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.85rem;">
                     Visualize todas as fichas sincronizadas pela sua mesa. As informações são atualizadas em tempo real.
                 </p>
-                <div id="masterCharacterList" class="master-list"></div>
+                <div class="master-panel-grid">
+                    <div>
+                        <div class="master-subheading">Fichas sincronizadas</div>
+                        <div id="masterCharacterList" class="master-list"></div>
+                    </div>
+                    <div>
+                        <div class="master-subheading">Log de alterações</div>
+                        <div id="masterLogList" class="master-list"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1665,6 +1694,7 @@ Exemplos:
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1698,6 +1728,8 @@ Exemplos:
             addDoc,
             getDocs,
             query,
+            where,
+            orderBy
             where
         };
 
@@ -1714,6 +1746,7 @@ Exemplos:
         let authUser = null;
         let isMasterUser = false;
         let masterUnsubscribe = null;
+        let logsUnsubscribe = null;
         let lastSyncedAt = null;
         let userCharacters = [];
         let activeCharacterId = null;
@@ -2399,6 +2432,7 @@ Exemplos:
             attributes.forEach(attr => createAttributeDots(attr, 4));
             createSkills();
             setupEventListeners();
+            setupGlobalAutosaveListeners();
 
             applyCharacterData(createDefaultCharacter());
             updateAuthStatusMessage('Entre para sincronizar sua ficha.', false);
@@ -2444,12 +2478,6 @@ Exemplos:
                 signOutBtn.dataset.bound = 'true';
             }
 
-            const syncNowBtn = document.getElementById('syncNowBtn');
-            if (syncNowBtn && !syncNowBtn.dataset.bound) {
-                syncNowBtn.addEventListener('click', () => autoSave(true));
-                syncNowBtn.dataset.bound = 'true';
-            }
-
             const openMasterPanelBtn = document.getElementById('openMasterPanelBtn');
             if (openMasterPanelBtn && !openMasterPanelBtn.dataset.bound) {
                 openMasterPanelBtn.addEventListener('click', () => {
@@ -2471,6 +2499,7 @@ Exemplos:
             const changeCharacterBtn = document.getElementById('changeCharacterBtn');
             if (changeCharacterBtn && !changeCharacterBtn.dataset.bound) {
                 changeCharacterBtn.addEventListener('click', async () => {
+                    await forceAutoSave();
                     await autoSave(true);
                     try {
                         await fetchUserCharacters();
@@ -2539,6 +2568,7 @@ Exemplos:
 
             if (!user) {
                 cleanupMasterSubscription();
+                cleanupLogsSubscription();
                 resetTabsAfterLogout();
                 userCharacters = [];
                 activeCharacterId = null;
@@ -2556,6 +2586,7 @@ Exemplos:
 
             if (isMasterUser) {
                 setupMasterSubscription();
+                setupLogsSubscription();
                 updateAuthStatusMessage('Painel do mestre ativo.');
                 if (shouldOpenMasterAfterLogin) {
                     const masterTabButton = document.getElementById('masterTabButton');
@@ -2569,6 +2600,7 @@ Exemplos:
             }
 
             cleanupMasterSubscription();
+            cleanupLogsSubscription();
             shouldOpenMasterAfterLogin = false;
             activeCharacterId = null;
             lastSyncedAt = null;
@@ -2695,6 +2727,16 @@ Exemplos:
             updateAuthStatusMessage('Nenhuma ficha encontrada. Faça alterações para salvar no Firebase.', false);
             return false;
         }
+
+        function updateUserCharacterCache(id, data, updatedAt) {
+            if (!id) return;
+
+            const nameFromData = data && data.nome ? data.nome : undefined;
+            const normalizedEntry = {
+                id,
+                name: (nameFromData || character.nome || 'Sem nome') || 'Sem nome',
+                updatedAt: updatedAt instanceof Date ? updatedAt : null
+            };
 
         async function saveCharacterToFirestore() {
             if (!firestore || !authUser || !window.firebaseServices || !activeCharacterId) return;
@@ -2966,6 +3008,59 @@ Exemplos:
             if (masterList) masterList.innerHTML = '';
         }
 
+        function setupLogsSubscription() {
+            if (!isMasterUser || !firestore || !window.firebaseServices) return;
+            if (typeof logsUnsubscribe === 'function') return;
+
+            const { collection: collectionFn, query: queryFn, orderBy: orderByFn, onSnapshot: onSnapshotFn } = window.firebaseServices;
+            const logsQuery = queryFn(collectionFn(firestore, 'logs'), orderByFn('timestamp', 'desc'));
+
+            logsUnsubscribe = onSnapshotFn(logsQuery, (snapshot) => {
+                const container = document.getElementById('masterLogList');
+                if (!container) return;
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="master-empty">Nenhum log registrado ainda.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data() || {};
+                    const time = data.timestamp?.toDate ? data.timestamp.toDate().toLocaleString('pt-BR') : '—';
+                    const card = document.createElement('div');
+                    card.classList.add('master-card');
+                    const displayName = data.userName || data.userId || 'Jogador';
+                    const characterLabel = data.characterName || data.characterId || '(Sem nome)';
+                    const changesJson = escapeHtml(JSON.stringify(data.changes || {}, null, 2));
+
+                    card.innerHTML = `
+                        <h3>${escapeHtml(characterLabel)}</h3>
+                        <p><strong>Jogador:</strong> ${escapeHtml(displayName)}</p>
+                        <p><strong>Data:</strong> ${escapeHtml(time)}</p>
+                        <details><summary>Ver alterações</summary><pre>${changesJson}</pre></details>
+                    `;
+
+                    container.appendChild(card);
+                });
+            }, (error) => {
+                console.error('Erro ao acompanhar logs de alterações:', error);
+            });
+        }
+
+        function cleanupLogsSubscription() {
+            if (typeof logsUnsubscribe === 'function') {
+                logsUnsubscribe();
+                logsUnsubscribe = null;
+            }
+
+            const container = document.getElementById('masterLogList');
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+
         function renderMasterPanel(characters) {
             const listEl = document.getElementById('masterCharacterList');
             if (!listEl) return;
@@ -3060,38 +3155,171 @@ Exemplos:
         }
 
         // ============= AUTO-SAVE =============
-        let autoSaveTimeout;
-        function autoSave(force = false) {
-            clearTimeout(autoSaveTimeout);
+        const inputAutoSaveTimers = new WeakMap();
+        let scheduledAutoSaveTimer = null;
+        let currentAutoSavePromise = null;
+        let autoSaveListenersBound = false;
+
+        function collectFormData() {
+            return sanitizeForFirestore(character);
+        }
+
+        function showAutosaveIndicator() {
             const indicator = document.getElementById('autosaveIndicator');
-            if (indicator) {
-                indicator.classList.add('show');
+            if (!indicator) return;
+            indicator.classList.add('show');
+
+            if (indicator.hideTimeout) {
+                clearTimeout(indicator.hideTimeout);
             }
 
+            indicator.hideTimeout = setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function scheduleAutoSave(delay = 500) {
+            if (scheduledAutoSaveTimer) {
+                clearTimeout(scheduledAutoSaveTimer);
+            }
+
+            scheduledAutoSaveTimer = setTimeout(() => {
+                scheduledAutoSaveTimer = null;
+                autoSaveCharacter();
+            }, delay);
+        }
+
+        function clearInputAutoSaveTimer(element) {
+            if (!element) return;
+            const timer = inputAutoSaveTimers.get(element);
+            if (timer) {
+                clearTimeout(timer);
+                inputAutoSaveTimers.delete(element);
+            }
+        }
+
+        async function forceAutoSave() {
+            if (scheduledAutoSaveTimer) {
+                clearTimeout(scheduledAutoSaveTimer);
+                scheduledAutoSaveTimer = null;
+            }
+
+            return autoSaveCharacter();
+        }
+
+        async function autoSaveCharacter() {
+            if (!authUser || !firestore || !activeCharacterId || !window.firebaseServices) {
+                return;
+            }
+
+            if (currentAutoSavePromise) {
+                return currentAutoSavePromise;
+            }
+
+            const { doc: docRefFn, setDoc: setDocFn, collection: collectionFn, addDoc: addDocFn, serverTimestamp: serverTimestampFn } = window.firebaseServices;
+            const characterRef = docRefFn(firestore, FIRESTORE_COLLECTION, activeCharacterId);
+            const formData = collectFormData();
+            const timestamp = serverTimestampFn();
+
+            showAutosaveIndicator();
+
+            const savePromise = (async () => {
+                try {
+                    const payload = {
+                        character: formData,
+                        owner: {
+                            uid: authUser.uid,
+                            name: authUser.displayName || '',
+                            email: authUser.email || ''
+                        },
+                        characterId: activeCharacterId,
+                        updatedAt: timestamp
+                    };
+
+                    await setDocFn(characterRef, payload, { merge: true });
+
+                    let logFailed = false;
             const performSave = async () => {
                 const canSync = authUser && firestore && activeCharacterId;
 
                 if (canSync) {
                     try {
-                        await saveCharacterToFirestore();
-                    } catch (error) {
-                        console.error('Erro ao salvar no Firebase:', error);
-                        updateAuthStatusMessage('Não foi possível sincronizar com o Firebase.', true);
+                        const logEntry = {
+                            userId: authUser.uid,
+                            userName: authUser.displayName || authUser.email || 'Jogador',
+                            characterId: activeCharacterId,
+                            characterName: formData?.nome || 'Sem nome',
+                            timestamp: serverTimestampFn(),
+                            changes: formData
+                        };
+
+                        await addDocFn(collectionFn(firestore, 'logs'), logEntry);
+                    } catch (logError) {
+                        logFailed = true;
+                        console.error('Erro ao registrar log de alterações:', logError);
                     }
-                }
 
-                if (indicator) {
-                    setTimeout(() => indicator.classList.remove('show'), 1000);
+                    lastSyncedAt = new Date();
+                    const message = `Auto-salvo em ${formatDateTime(lastSyncedAt)}.`;
+                    updateAuthStatusMessage(logFailed ? `${message} Não foi possível registrar o log.` : message, logFailed);
+                    updateUserCharacterCache(activeCharacterId, character, lastSyncedAt);
+                    renderCharacterSelection();
+                } catch (error) {
+                    console.error('Erro ao salvar automaticamente no Firebase:', error);
+                    updateAuthStatusMessage('Erro ao salvar automaticamente no Firebase.', true);
+                    throw error;
                 }
-            };
+            })();
 
+            currentAutoSavePromise = savePromise;
+
+            try {
+                await savePromise;
+            } finally {
+                currentAutoSavePromise = null;
+            }
+
+            return savePromise;
+        }
+
+        function autoSave(force = false) {
             if (force) {
+                return forceAutoSave();
                 return performSave();
             } else {
                 autoSaveTimeout = setTimeout(() => {
                     performSave();
                 }, 500);
             }
+
+            scheduleAutoSave(500);
+        }
+
+        function setupGlobalAutosaveListeners() {
+            if (autoSaveListenersBound) return;
+            autoSaveListenersBound = true;
+
+            document.addEventListener('change', (event) => {
+                const target = event.target;
+                if (!target || typeof target.matches !== 'function') return;
+                if (!target.matches('input, select, textarea')) return;
+
+                clearInputAutoSaveTimer(target);
+                forceAutoSave();
+            });
+
+            document.addEventListener('input', (event) => {
+                const target = event.target;
+                if (!target || typeof target.matches !== 'function') return;
+                if (!target.matches('input, select, textarea')) return;
+
+                clearInputAutoSaveTimer(target);
+                const timer = setTimeout(() => {
+                    inputAutoSaveTimers.delete(target);
+                    autoSaveCharacter();
+                }, 1500);
+                inputAutoSaveTimers.set(target, timer);
+            });
         }
 
         // ============= CRIAR DOTS =============
@@ -3701,7 +3929,7 @@ Exemplos:
                     try {
                         const imported = JSON.parse(event.target.result);
                         applyCharacterData(imported);
-                        autoSave(true);
+                        forceAutoSave();
                         showAlert('✅ Personagem importado com sucesso!', 'success');
                     } catch (error) {
                         showAlert('❌ Erro ao importar arquivo! Verifique se é um JSON válido.', 'danger');
@@ -3723,6 +3951,7 @@ Exemplos:
                 if (confirm('⚠️ ÚLTIMA CONFIRMAÇÃO! Todos os dados serão perdidos. Tem certeza ABSOLUTA?')) {
                     applyCharacterData(createDefaultCharacter());
                     updateActiveCharacterDisplay();
+                    forceAutoSave();
                     autoSave(true);
                     showAlert('🔄 Personagem resetado! Dados limpos no Firebase.', 'success');
                 }
