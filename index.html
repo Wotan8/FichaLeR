@@ -89,6 +89,128 @@
             transform: translateY(0);
         }
 
+        .auth-wrapper {
+            max-width: 500px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .auth-card h2 {
+            font-size: clamp(1rem, 4vw, 1.4rem);
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .auth-note {
+            font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+            color: #94a3b8;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .auth-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .auth-actions .btn {
+            width: auto;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-name {
+            font-weight: 700;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+        }
+
+        .user-email {
+            font-size: clamp(0.75rem, 2.3vw, 0.85rem);
+            color: #94a3b8;
+        }
+
+        .master-badge {
+            background: linear-gradient(135deg, #facc15, #f97316);
+            color: #1f2937;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 16px rgba(250, 204, 21, 0.3);
+        }
+
+        .master-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .master-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .master-card h3 {
+            font-size: clamp(0.95rem, 3vw, 1.1rem);
+            margin-bottom: 6px;
+        }
+
+        .master-card p {
+            font-size: clamp(0.75rem, 2.2vw, 0.85rem);
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .master-card details {
+            margin-top: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .master-card details pre {
+            white-space: pre-wrap;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.75rem;
+            margin-top: 6px;
+            color: #e2e8f0;
+        }
+
+        .master-empty {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            border: 1px dashed rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+
         @media (max-width: 639px) {
             .autosave-indicator {
                 top: 10px;
@@ -981,7 +1103,36 @@
 <body>
     <div class="autosave-indicator" id="autosaveIndicator">💾 Auto-salvando...</div>
 
-    <div class="container">
+    <div class="auth-wrapper" id="authWrapper">
+        <div class="auth-card" id="authCard">
+            <h2>🔐 Entrar para sincronizar</h2>
+            <p class="auth-note">
+                Use sua conta Google para salvar a ficha na nuvem e acessar de qualquer lugar.
+            </p>
+            <div class="auth-actions">
+                <button class="btn btn-primary" id="googleSignInBtn">Entrar com Google</button>
+            </div>
+            <p class="auth-note">
+                Após o login, as alterações são salvas automaticamente no Firebase.
+            </p>
+        </div>
+        <div class="auth-card user-info" id="userInfoCard" style="display: none;">
+            <div class="user-header">
+                <div>
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-email" id="userEmail"></div>
+                </div>
+                <span class="master-badge" id="masterBadge" style="display: none;">Mestre</span>
+            </div>
+            <div class="auth-actions">
+                <button class="btn btn-primary" id="syncNowBtn">Sincronizar agora</button>
+                <button class="btn btn-secondary" id="signOutBtn">Sair</button>
+            </div>
+            <p class="auth-note" id="authStatusMessage"></p>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer" style="display: none;">
         <h1>⚔️ LENDAS E RELÍQUIAS ⚔️</h1>
         <p class="subtitle">Sistema de Ficha Digital com Auto-Save</p>
 
@@ -998,6 +1149,7 @@
             <button class="tab" onclick="switchTab('inventario')">🎒 Inventário</button>
             <button class="tab" onclick="switchTab('notas')">📝 Notas</button>
             <button class="tab" onclick="switchTab('evolucao')">⭐ EXP</button>
+            <button class="tab" id="masterTabButton" style="display: none;" onclick="switchTab('mestre')">🧙‍♂️ Mestre</button>
         </div>
 
         <!-- ABA BÁSICO -->
@@ -1431,6 +1583,16 @@ Exemplos:
             </div>
         </div>
 
+        <div id="mestre" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Painel do Mestre</h2>
+                <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.85rem;">
+                    Visualize todas as fichas sincronizadas pela sua mesa. As informações são atualizadas em tempo real.
+                </p>
+                <div id="masterCharacterList" class="master-list"></div>
+            </div>
+        </div>
+
         <!-- BOTÕES DE AÇÃO FORA DAS ABAS -->
         <div class="button-group">
             <button class="btn btn-primary" onclick="exportCharacter()">📤 EXPORTAR</button>
@@ -1439,7 +1601,56 @@ Exemplos:
         </div>
     </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            projectId: "SEU_PROJETO",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.firebaseServices = {
+            app,
+            auth,
+            db,
+            onAuthStateChanged,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signOut,
+            doc,
+            getDoc,
+            setDoc,
+            collection,
+            onSnapshot,
+            serverTimestamp
+        };
+
+        window.dispatchEvent(new Event('firebase-services-ready'));
+    </script>
+
     <script>
+        // ============= CONFIGURAÇÕES =============
+        const MASTER_EMAILS = ['mestre@exemplo.com']; // Atualize com os e-mails que terão acesso ao painel do mestre
+        const FIRESTORE_COLLECTION = 'characters';
+
+        let firebaseAuth = null;
+        let firestore = null;
+        let authUser = null;
+        let isMasterUser = false;
+        let masterUnsubscribe = null;
+        let lastSyncedAt = null;
+        let localBackupData = null;
+
         // ============= DADOS DO SISTEMA =============
         const SKILLS = {
             mental: [
@@ -1928,19 +2139,61 @@ Exemplos:
         };
 
         // ============= STATE =============
-        let character = {
-            nome: '', jogador: '', idade: 0, raca: '', classe: '', virtude: '', vicio: '',
-            tamanho: 5, luns: 0,
-            int: 1, for: 1, pre: 1, rac: 1, des: 1, man: 1, prs: 1, vig: 1, aut: 1,
-            skills: {},
-            skillInputs: {},
-            classAbilities: {},
-            classResources: {},
-            hpCurrent: 5, detCurrent: 3, sanCurrent: 100, blindagem: 0,
-            containers: [],
-            notas: '',
-            exp: 0
-        };
+        function createDefaultCharacter() {
+            return {
+                nome: '', jogador: '', idade: 0, raca: '', classe: '', virtude: '', vicio: '',
+                tamanho: 5, luns: 0,
+                int: 1, for: 1, pre: 1, rac: 1, des: 1, man: 1, prs: 1, vig: 1, aut: 1,
+                skills: {},
+                skillInputs: {},
+                classAbilities: {},
+                classResources: {},
+                hpCurrent: 5, detCurrent: 3, sanCurrent: 100, blindagem: 0,
+                containers: [],
+                notas: '',
+                exp: 0
+            };
+        }
+
+        let character = createDefaultCharacter();
+
+        function applyCharacterData(data = {}) {
+            const base = createDefaultCharacter();
+            character = {
+                ...base,
+                ...data,
+                skills: { ...base.skills, ...(data.skills || {}) },
+                skillInputs: { ...base.skillInputs, ...(data.skillInputs || {}) },
+                classAbilities: { ...base.classAbilities, ...(data.classAbilities || {}) },
+                classResources: { ...base.classResources, ...(data.classResources || {}) }
+            };
+
+            if (!Array.isArray(character.containers) || character.containers.length === 0) {
+                character.containers = [{
+                    id: Date.now(),
+                    name: 'Mochila',
+                    maxCapacity: character.for + character.vig,
+                    items: []
+                }];
+            } else {
+                character.containers = character.containers.map(container => ({
+                    ...container,
+                    items: Array.isArray(container.items) ? container.items : []
+                }));
+            }
+
+            if (typeof character.hpCurrent !== 'number') character.hpCurrent = 5;
+            if (typeof character.detCurrent !== 'number') character.detCurrent = 3;
+            if (typeof character.sanCurrent !== 'number') character.sanCurrent = 100;
+            if (typeof character.blindagem !== 'number') character.blindagem = 0;
+            if (typeof character.exp !== 'number') character.exp = 0;
+            if (!character.notas) character.notas = '';
+
+            loadCharacterData();
+            updateAllCalculations();
+            updateClassTests();
+            updateClassResourcesDisplay();
+        }
 
         // ============= FUNÇÃO PARA FORÇAR CARREGAMENTO DA CLASSE =============
         function forceLoadClass() {
@@ -2075,39 +2328,313 @@ Exemplos:
             const attributes = ['int', 'for', 'pre', 'rac', 'des', 'man', 'prs', 'vig', 'aut'];
             attributes.forEach(attr => createAttributeDots(attr, 4));
             createSkills();
-            
-            const saved = localStorage.getItem('lendasReliquia_character');
-            if (saved) {
-                try {
-                    character = JSON.parse(saved);
-                    if (!character.containers) character.containers = [];
-                    if (!character.notas) character.notas = '';
-                    if (!character.skillInputs) character.skillInputs = {};
-                    if (!character.classAbilities) character.classAbilities = {};
-                    if (!character.classResources) character.classResources = {};
-                    
-                    loadCharacterData();
-                } catch(e) {
-                    console.error('Erro ao carregar:', e);
-                    character.containers = [{
-                        id: Date.now(),
-                        name: 'Mochila',
-                        maxCapacity: character.for + character.vig,
-                        items: []
-                    }];
-                }
-            } else {
-                character.containers = [{
-                    id: Date.now(),
-                    name: 'Mochila',
-                    maxCapacity: character.for + character.vig,
-                    items: []
-                }];
-            }
-            
-            updateAllCalculations();
             setupEventListeners();
-            updateContainers();
+
+            try {
+                const saved = localStorage.getItem('lendasReliquia_character');
+                if (saved) {
+                    localBackupData = JSON.parse(saved);
+                    applyCharacterData(localBackupData);
+                } else {
+                    applyCharacterData(createDefaultCharacter());
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados locais:', error);
+                applyCharacterData(createDefaultCharacter());
+            }
+
+            initializeFirebaseIntegration();
+        }
+
+        function initializeFirebaseIntegration() {
+            if (window.firebaseServices) {
+                configureFirebaseServices(window.firebaseServices);
+            } else {
+                updateAuthStatusMessage('Carregando serviços do Firebase...', false);
+                window.addEventListener('firebase-services-ready', () => {
+                    configureFirebaseServices(window.firebaseServices);
+                }, { once: true });
+            }
+        }
+
+        function configureFirebaseServices(services) {
+            if (!services) {
+                updateAuthStatusMessage('Firebase não configurado. Atualize as credenciais antes de usar.', true);
+                return;
+            }
+
+            firebaseAuth = services.auth;
+            firestore = services.db;
+
+            const signInBtn = document.getElementById('googleSignInBtn');
+            if (signInBtn && !signInBtn.dataset.bound) {
+                signInBtn.addEventListener('click', () => handleSignIn(services));
+                signInBtn.dataset.bound = 'true';
+            }
+
+            const signOutBtn = document.getElementById('signOutBtn');
+            if (signOutBtn && !signOutBtn.dataset.bound) {
+                signOutBtn.addEventListener('click', () => handleSignOut(services));
+                signOutBtn.dataset.bound = 'true';
+            }
+
+            const syncNowBtn = document.getElementById('syncNowBtn');
+            if (syncNowBtn && !syncNowBtn.dataset.bound) {
+                syncNowBtn.addEventListener('click', () => autoSave(true));
+                syncNowBtn.dataset.bound = 'true';
+            }
+
+            services.onAuthStateChanged(firebaseAuth, handleAuthStateChange);
+            updateAuthUI();
+        }
+
+        async function handleSignIn(services) {
+            try {
+                const provider = new services.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                await services.signInWithPopup(firebaseAuth, provider);
+                updateAuthStatusMessage('Login realizado com sucesso!');
+            } catch (error) {
+                console.error('Erro no processo de login:', error);
+                updateAuthStatusMessage('Não foi possível concluir o login. Verifique as credenciais do Firebase.', true);
+            }
+        }
+
+        async function handleSignOut(services) {
+            try {
+                await services.signOut(firebaseAuth);
+                updateAuthStatusMessage('Você saiu da conta.');
+            } catch (error) {
+                console.error('Erro ao sair da conta:', error);
+                updateAuthStatusMessage('Não foi possível encerrar a sessão.', true);
+            }
+        }
+
+        async function handleAuthStateChange(user) {
+            authUser = user;
+            const normalizedMasters = MASTER_EMAILS.map(email => email.toLowerCase().trim());
+            isMasterUser = !!user && normalizedMasters.includes((user?.email || '').toLowerCase());
+
+            if (!user) {
+                cleanupMasterSubscription();
+                resetTabsAfterLogout();
+                updateAuthUI();
+                updateAuthStatusMessage('Entre para sincronizar sua ficha.', false);
+                return;
+            }
+
+            updateAuthUI();
+
+            try {
+                const hasRemoteData = await loadCharacterFromFirestore();
+                if (!hasRemoteData) {
+                    await saveCharacterToFirestore();
+                    updateAuthStatusMessage('Primeira sincronização concluída.');
+                }
+            } catch (error) {
+                console.error('Erro ao sincronizar com o Firebase:', error);
+                updateAuthStatusMessage('Não foi possível carregar os dados do Firebase.', true);
+            }
+
+            if (isMasterUser) {
+                setupMasterSubscription();
+            } else {
+                cleanupMasterSubscription();
+            }
+        }
+
+        function updateAuthUI() {
+            const appContainer = document.getElementById('appContainer');
+            const authCard = document.getElementById('authCard');
+            const userInfoCard = document.getElementById('userInfoCard');
+            const userNameEl = document.getElementById('userName');
+            const userEmailEl = document.getElementById('userEmail');
+            const masterBadge = document.getElementById('masterBadge');
+            const masterTabButton = document.getElementById('masterTabButton');
+
+            if (!appContainer || !authCard || !userInfoCard) return;
+
+            if (authUser) {
+                appContainer.style.display = 'block';
+                authCard.style.display = 'none';
+                userInfoCard.style.display = 'flex';
+                userNameEl.textContent = authUser.displayName || 'Jogador';
+                userEmailEl.textContent = authUser.email || '';
+                masterBadge.style.display = isMasterUser ? 'inline-flex' : 'none';
+                masterTabButton.style.display = isMasterUser ? 'inline-flex' : 'none';
+            } else {
+                appContainer.style.display = 'none';
+                authCard.style.display = 'block';
+                userInfoCard.style.display = 'none';
+                masterBadge.style.display = 'none';
+                masterTabButton.style.display = 'none';
+            }
+
+            if (!isMasterUser) {
+                masterTabButton.classList.remove('active');
+                const masterContent = document.getElementById('mestre');
+                if (masterContent) masterContent.classList.remove('active');
+            }
+        }
+
+        function updateAuthStatusMessage(message, isError = false) {
+            const statusEl = document.getElementById('authStatusMessage');
+            if (!statusEl) return;
+            statusEl.textContent = message || '';
+            statusEl.style.color = isError ? 'var(--danger)' : '#94a3b8';
+        }
+
+        async function loadCharacterFromFirestore() {
+            if (!firestore || !authUser || !window.firebaseServices) return false;
+
+            const services = window.firebaseServices;
+            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, authUser.uid);
+            const snapshot = await services.getDoc(docRef);
+
+            if (snapshot.exists()) {
+                const data = snapshot.data() || {};
+                const characterData = data.character || data;
+                applyCharacterData(characterData);
+
+                try {
+                    localStorage.setItem('lendasReliquia_character', JSON.stringify(character));
+                    localBackupData = JSON.parse(JSON.stringify(character));
+                } catch (storageError) {
+                    console.error('Erro ao atualizar o backup local:', storageError);
+                }
+
+                if (data.updatedAt?.toDate) {
+                    lastSyncedAt = data.updatedAt.toDate();
+                    updateAuthStatusMessage(`Ficha carregada do Firebase em ${formatDateTime(lastSyncedAt)}.`);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        async function saveCharacterToFirestore() {
+            if (!firestore || !authUser || !window.firebaseServices) return;
+
+            const services = window.firebaseServices;
+            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, authUser.uid);
+
+            const payload = {
+                character,
+                owner: {
+                    uid: authUser.uid,
+                    name: authUser.displayName || '',
+                    email: authUser.email || ''
+                },
+                updatedAt: services.serverTimestamp()
+            };
+
+            await services.setDoc(docRef, payload, { merge: true });
+            lastSyncedAt = new Date();
+            updateAuthStatusMessage(`Sincronizado em ${formatDateTime(lastSyncedAt)}.`);
+        }
+
+        function setupMasterSubscription() {
+            if (!isMasterUser || !firestore || !window.firebaseServices) return;
+            if (typeof masterUnsubscribe === 'function') return;
+
+            const services = window.firebaseServices;
+            const collectionRef = services.collection(firestore, FIRESTORE_COLLECTION);
+
+            masterUnsubscribe = services.onSnapshot(collectionRef, (snapshot) => {
+                const characters = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data() || {};
+                    const charData = data.character || {};
+                    characters.push({
+                        id: docSnap.id,
+                        name: charData.nome || 'Sem nome',
+                        player: charData.jogador || '',
+                        ownerName: data.owner?.name || '',
+                        email: data.owner?.email || '',
+                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+                        raw: charData
+                    });
+                });
+
+                renderMasterPanel(characters);
+            }, (error) => {
+                console.error('Erro ao acompanhar fichas:', error);
+                updateAuthStatusMessage('Erro ao atualizar o painel do mestre.', true);
+            });
+        }
+
+        function cleanupMasterSubscription() {
+            if (typeof masterUnsubscribe === 'function') {
+                masterUnsubscribe();
+                masterUnsubscribe = null;
+            }
+
+            const masterList = document.getElementById('masterCharacterList');
+            if (masterList) masterList.innerHTML = '';
+        }
+
+        function renderMasterPanel(characters) {
+            const listEl = document.getElementById('masterCharacterList');
+            if (!listEl) return;
+
+            if (!characters || characters.length === 0) {
+                listEl.innerHTML = '<div class="master-empty">Nenhuma ficha sincronizada ainda.</div>';
+                return;
+            }
+
+            const sorted = [...characters].sort((a, b) => {
+                const timeA = a.updatedAt ? a.updatedAt.getTime() : 0;
+                const timeB = b.updatedAt ? b.updatedAt.getTime() : 0;
+                return timeB - timeA;
+            });
+
+            listEl.innerHTML = sorted.map(characterInfo => {
+                const ownerDisplay = characterInfo.ownerName || characterInfo.player || 'Jogador';
+                const emailInfo = characterInfo.email ? ` (${escapeHtml(characterInfo.email)})` : '';
+                const updatedInfo = characterInfo.updatedAt ? formatDateTime(characterInfo.updatedAt) : 'Sem data';
+                const rawData = escapeHtml(JSON.stringify(characterInfo.raw, null, 2));
+
+                return `
+                    <div class="master-card">
+                        <h3>${escapeHtml(characterInfo.name)}</h3>
+                        <p><strong>Jogador:</strong> ${escapeHtml(ownerDisplay)}${emailInfo}</p>
+                        <p><strong>Atualizado:</strong> ${updatedInfo}</p>
+                        <details>
+                            <summary>Ver ficha completa</summary>
+                            <pre>${rawData}</pre>
+                        </details>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatDateTime(date) {
+            if (!(date instanceof Date)) return '';
+            return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function escapeHtml(value) {
+            if (value === undefined || value === null) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function resetTabsAfterLogout() {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            const basicoTab = document.querySelector('.tab[onclick*="basico"]');
+            const basicoContent = document.getElementById('basico');
+            if (basicoTab) basicoTab.classList.add('active');
+            if (basicoContent) basicoContent.classList.add('active');
         }
 
         function setupEventListeners() {
@@ -2136,19 +2663,42 @@ Exemplos:
 
         // ============= AUTO-SAVE =============
         let autoSaveTimeout;
-        function autoSave() {
+        function autoSave(force = false) {
             clearTimeout(autoSaveTimeout);
             const indicator = document.getElementById('autosaveIndicator');
-            indicator.classList.add('show');
-            
-            autoSaveTimeout = setTimeout(() => {
+            if (indicator) {
+                indicator.classList.add('show');
+            }
+
+            const performSave = async () => {
                 try {
                     localStorage.setItem('lendasReliquia_character', JSON.stringify(character));
-                } catch(e) {
-                    console.error('Erro ao salvar:', e);
+                    localBackupData = JSON.parse(JSON.stringify(character));
+                } catch (error) {
+                    console.error('Erro ao salvar localmente:', error);
                 }
-                setTimeout(() => indicator.classList.remove('show'), 1000);
-            }, 500);
+
+                if (authUser && firestore) {
+                    try {
+                        await saveCharacterToFirestore();
+                    } catch (error) {
+                        console.error('Erro ao salvar no Firebase:', error);
+                        updateAuthStatusMessage('Não foi possível sincronizar com o Firebase.', true);
+                    }
+                }
+
+                if (indicator) {
+                    setTimeout(() => indicator.classList.remove('show'), 1000);
+                }
+            };
+
+            if (force) {
+                performSave();
+            } else {
+                autoSaveTimeout = setTimeout(() => {
+                    performSave();
+                }, 500);
+            }
         }
 
         // ============= CRIAR DOTS =============
@@ -2750,17 +3300,9 @@ Exemplos:
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     try {
-                        character = JSON.parse(event.target.result);
-                        
-                        if (!character.containers) character.containers = [];
-                        if (!character.skillInputs) character.skillInputs = {};
-                        if (!character.notas) character.notas = '';
-                        if (!character.classAbilities) character.classAbilities = {};
-                        if (!character.classResources) character.classResources = {};
-                        
-                        loadCharacterData();
-                        updateAllCalculations();
-                        autoSave();
+                        const imported = JSON.parse(event.target.result);
+                        applyCharacterData(imported);
+                        autoSave(true);
                         showAlert('✅ Personagem importado com sucesso!', 'success');
                     } catch (error) {
                         showAlert('❌ Erro ao importar arquivo! Verifique se é um JSON válido.', 'danger');
