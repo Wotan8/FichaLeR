@@ -89,6 +89,197 @@
             transform: translateY(0);
         }
 
+        .auth-wrapper {
+            max-width: 500px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .auth-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .auth-card h2 {
+            font-size: clamp(1rem, 4vw, 1.4rem);
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .character-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .character-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .character-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            gap: 12px;
+        }
+
+        .character-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .character-name {
+            font-weight: 700;
+            color: #e2e8f0;
+            font-size: clamp(0.95rem, 3vw, 1.05rem);
+        }
+
+        .character-meta {
+            font-size: clamp(0.75rem, 2.3vw, 0.85rem);
+            color: #94a3b8;
+        }
+
+        .character-empty {
+            text-align: center;
+            padding: 20px;
+            border: 1px dashed rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            color: #94a3b8;
+            font-size: clamp(0.8rem, 2.3vw, 0.9rem);
+        }
+
+        .auth-note {
+            font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+            color: #94a3b8;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .auth-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .auth-actions .btn {
+            width: auto;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-name {
+            font-weight: 700;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+        }
+
+        .user-email {
+            font-size: clamp(0.75rem, 2.3vw, 0.85rem);
+            color: #94a3b8;
+        }
+
+        .master-badge {
+            background: linear-gradient(135deg, #facc15, #f97316);
+            color: #1f2937;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 16px rgba(250, 204, 21, 0.3);
+        }
+
+        .master-panel-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        @media (min-width: 1024px) {
+            .master-panel-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .master-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .master-subheading {
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            color: #cbd5f5;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .master-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .master-card h3 {
+            font-size: clamp(0.95rem, 3vw, 1.1rem);
+            margin-bottom: 6px;
+        }
+
+        .master-card p {
+            font-size: clamp(0.75rem, 2.2vw, 0.85rem);
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .master-card details {
+            margin-top: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .master-card details pre {
+            white-space: pre-wrap;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.75rem;
+            margin-top: 6px;
+            color: #e2e8f0;
+        }
+
+        .master-empty {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            border: 1px dashed rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+
         @media (max-width: 639px) {
             .autosave-indicator {
                 top: 10px;
@@ -981,7 +1172,47 @@
 <body>
     <div class="autosave-indicator" id="autosaveIndicator">💾 Auto-salvando...</div>
 
-    <div class="container">
+    <div class="auth-wrapper" id="authWrapper">
+        <div class="auth-card" id="authCard">
+            <h2>🔐 Entrar para sincronizar</h2>
+            <p class="auth-note">
+                Use sua conta Google para salvar a ficha na nuvem e acessar de qualquer lugar.
+            </p>
+            <div class="auth-actions">
+                <button class="btn btn-primary" id="loginBtn" type="button">Entrar com Google</button>
+                <button class="btn btn-secondary" id="masterLoginBtn" type="button">Entrar no Painel do Mestre</button>
+            </div>
+            <p class="auth-note">
+                Após o login, as alterações são salvas automaticamente no Firebase.
+            </p>
+        </div>
+        <div class="auth-card user-info" id="userInfoCard" style="display: none;">
+            <div class="user-header">
+                <div>
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-email" id="userEmail"></div>
+                </div>
+                <span class="master-badge" id="masterBadge" style="display: none;">Mestre</span>
+            </div>
+            <p class="auth-note" id="activeCharacterLabel" style="display: none;">
+                Personagem ativo: <strong id="activeCharacterName"></strong>
+            </p>
+            <div class="auth-actions">
+                <button class="btn btn-primary" id="openMasterPanelBtn" style="display: none;" type="button">Abrir Painel do Mestre</button>
+                <button class="btn btn-secondary" id="changeCharacterBtn" style="display: none;" type="button">Trocar Personagem</button>
+                <button class="btn btn-secondary" id="signOutBtn" type="button">Sair</button>
+            </div>
+            <p class="auth-note" id="authStatusMessage"></p>
+        </div>
+        <div class="auth-card character-selection" id="characterSelectionCard" style="display: none;">
+            <h2>🎲 Seus Personagens</h2>
+            <p class="auth-note">Escolha um personagem existente ou crie um novo para começar.</p>
+            <div class="character-list" id="characterList"></div>
+            <button class="btn btn-primary" id="createCharacterBtn" style="display: none;">➕ Criar novo personagem</button>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer" style="display: none;">
         <h1>⚔️ LENDAS E RELÍQUIAS ⚔️</h1>
         <p class="subtitle">Sistema de Ficha Digital com Auto-Save</p>
 
@@ -989,15 +1220,16 @@
         <div class="alert alert-danger" id="alertError"></div>
 
         <div class="tabs" id="tabContainer">
-            <button class="tab active" onclick="switchTab('basico')">📋 Básico</button>
-            <button class="tab" onclick="switchTab('atributos')">💪 Atributos</button>
-            <button class="tab" onclick="switchTab('habilidades')">🎯 Habilidades</button>
-            <button class="tab" onclick="switchTab('caracteristicas')">📊 Stats</button>
-            <button class="tab" onclick="switchTab('classe')">⭐ Classe</button>
-            <button class="tab" onclick="switchTab('combate')">⚔️ Combate</button>
-            <button class="tab" onclick="switchTab('inventario')">🎒 Inventário</button>
-            <button class="tab" onclick="switchTab('notas')">📝 Notas</button>
-            <button class="tab" onclick="switchTab('evolucao')">⭐ EXP</button>
+            <button class="tab active" onclick="switchTab('basico', this)">📋 Básico</button>
+            <button class="tab" onclick="switchTab('atributos', this)">💪 Atributos</button>
+            <button class="tab" onclick="switchTab('habilidades', this)">🎯 Habilidades</button>
+            <button class="tab" onclick="switchTab('caracteristicas', this)">📊 Stats</button>
+            <button class="tab" onclick="switchTab('classe', this)">⭐ Classe</button>
+            <button class="tab" onclick="switchTab('combate', this)">⚔️ Combate</button>
+            <button class="tab" onclick="switchTab('inventario', this)">🎒 Inventário</button>
+            <button class="tab" onclick="switchTab('notas', this)">📝 Notas</button>
+            <button class="tab" onclick="switchTab('evolucao', this)">⭐ EXP</button>
+            <button class="tab" id="masterTabButton" style="display: none;" onclick="switchTab('mestre', this)">🧙‍♂️ Mestre</button>
         </div>
 
         <!-- ABA BÁSICO -->
@@ -1431,6 +1663,25 @@ Exemplos:
             </div>
         </div>
 
+        <div id="mestre" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">Painel do Mestre</h2>
+                <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.85rem;">
+                    Visualize todas as fichas sincronizadas pela sua mesa. As informações são atualizadas em tempo real.
+                </p>
+                <div class="master-panel-grid">
+                    <div>
+                        <div class="master-subheading">Fichas sincronizadas</div>
+                        <div id="masterCharacterList" class="master-list"></div>
+                    </div>
+                    <div>
+                        <div class="master-subheading">Log de alterações</div>
+                        <div id="masterLogList" class="master-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- BOTÕES DE AÇÃO FORA DAS ABAS -->
         <div class="button-group">
             <button class="btn btn-primary" onclick="exportCharacter()">📤 EXPORTAR</button>
@@ -1439,7 +1690,67 @@ Exemplos:
         </div>
     </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, serverTimestamp, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIbT-RK802RW-IbQx2pA7b_T5i2cgg9rA",
+            authDomain: "rpglendasereliquias.firebaseapp.com",
+            projectId: "rpglendasereliquias",
+            storageBucket: "rpglendasereliquias.firebasestorage.app",
+            messagingSenderId: "532937705637",
+            appId: "1:532937705637:web:6ee2459332c8875d43e54c",
+            measurementId: "G-K992TL3VLL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.firebaseServices = {
+            app,
+            auth,
+            db,
+            onAuthStateChanged,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signOut,
+            doc,
+            getDoc,
+            setDoc,
+            collection,
+            onSnapshot,
+            serverTimestamp,
+            addDoc,
+            getDocs,
+            query,
+            where,
+            orderBy
+        };
+
+        window.dispatchEvent(new Event('firebase-services-ready'));
+    </script>
+
     <script>
+        // ============= CONFIGURAÇÕES =============
+        const MASTER_PASSWORD = 'mestresoberano@123';
+        const FIRESTORE_COLLECTION = 'characters';
+
+        let firebaseAuth = null;
+        let firestore = null;
+        let firebaseConfigured = false;
+        let authUser = null;
+        let isMasterUser = false;
+        let masterUnsubscribe = null;
+        let logsUnsubscribe = null;
+        let lastSyncedAt = null;
+        let userCharacters = [];
+        let activeCharacterId = null;
+        let masterPasswordVerified = false;
+        let shouldOpenMasterAfterLogin = false;
+
         // ============= DADOS DO SISTEMA =============
         const SKILLS = {
             mental: [
@@ -1928,19 +2239,62 @@ Exemplos:
         };
 
         // ============= STATE =============
-        let character = {
-            nome: '', jogador: '', idade: 0, raca: '', classe: '', virtude: '', vicio: '',
-            tamanho: 5, luns: 0,
-            int: 1, for: 1, pre: 1, rac: 1, des: 1, man: 1, prs: 1, vig: 1, aut: 1,
-            skills: {},
-            skillInputs: {},
-            classAbilities: {},
-            classResources: {},
-            hpCurrent: 5, detCurrent: 3, sanCurrent: 100, blindagem: 0,
-            containers: [],
-            notas: '',
-            exp: 0
-        };
+        function createDefaultCharacter() {
+            return {
+                nome: '', jogador: '', idade: 0, raca: '', classe: '', virtude: '', vicio: '',
+                tamanho: 5, luns: 0,
+                int: 1, for: 1, pre: 1, rac: 1, des: 1, man: 1, prs: 1, vig: 1, aut: 1,
+                skills: {},
+                skillInputs: {},
+                classAbilities: {},
+                classResources: {},
+                hpCurrent: 5, detCurrent: 3, sanCurrent: 100, blindagem: 0,
+                containers: [],
+                notas: '',
+                exp: 0
+            };
+        }
+
+        let character = createDefaultCharacter();
+
+        function applyCharacterData(data = {}) {
+            const base = createDefaultCharacter();
+            character = {
+                ...base,
+                ...data,
+                skills: { ...base.skills, ...(data.skills || {}) },
+                skillInputs: { ...base.skillInputs, ...(data.skillInputs || {}) },
+                classAbilities: { ...base.classAbilities, ...(data.classAbilities || {}) },
+                classResources: { ...base.classResources, ...(data.classResources || {}) }
+            };
+
+            if (!Array.isArray(character.containers) || character.containers.length === 0) {
+                character.containers = [{
+                    id: Date.now(),
+                    name: 'Mochila',
+                    maxCapacity: character.for + character.vig,
+                    items: []
+                }];
+            } else {
+                character.containers = character.containers.map(container => ({
+                    ...container,
+                    items: Array.isArray(container.items) ? container.items : []
+                }));
+            }
+
+            if (typeof character.hpCurrent !== 'number') character.hpCurrent = 5;
+            if (typeof character.detCurrent !== 'number') character.detCurrent = 3;
+            if (typeof character.sanCurrent !== 'number') character.sanCurrent = 100;
+            if (typeof character.blindagem !== 'number') character.blindagem = 0;
+            if (typeof character.exp !== 'number') character.exp = 0;
+            if (!character.notas) character.notas = '';
+
+            loadCharacterData();
+            updateAllCalculations();
+            updateClassTests();
+            updateClassResourcesDisplay();
+            updateActiveCharacterDisplay();
+        }
 
         // ============= FUNÇÃO PARA FORÇAR CARREGAMENTO DA CLASSE =============
         function forceLoadClass() {
@@ -2075,39 +2429,672 @@ Exemplos:
             const attributes = ['int', 'for', 'pre', 'rac', 'des', 'man', 'prs', 'vig', 'aut'];
             attributes.forEach(attr => createAttributeDots(attr, 4));
             createSkills();
-            
-            const saved = localStorage.getItem('lendasReliquia_character');
-            if (saved) {
-                try {
-                    character = JSON.parse(saved);
-                    if (!character.containers) character.containers = [];
-                    if (!character.notas) character.notas = '';
-                    if (!character.skillInputs) character.skillInputs = {};
-                    if (!character.classAbilities) character.classAbilities = {};
-                    if (!character.classResources) character.classResources = {};
-                    
-                    loadCharacterData();
-                } catch(e) {
-                    console.error('Erro ao carregar:', e);
-                    character.containers = [{
-                        id: Date.now(),
-                        name: 'Mochila',
-                        maxCapacity: character.for + character.vig,
-                        items: []
-                    }];
-                }
-            } else {
-                character.containers = [{
-                    id: Date.now(),
-                    name: 'Mochila',
-                    maxCapacity: character.for + character.vig,
-                    items: []
-                }];
-            }
-            
-            updateAllCalculations();
             setupEventListeners();
-            updateContainers();
+            setupGlobalAutosaveListeners();
+
+            applyCharacterData(createDefaultCharacter());
+            updateAuthStatusMessage('Entre para sincronizar sua ficha.', false);
+
+            initializeFirebaseIntegration();
+        }
+
+        function initializeFirebaseIntegration() {
+            if (window.firebaseServices) {
+                configureFirebaseServices(window.firebaseServices);
+                return;
+            }
+
+            updateAuthStatusMessage('Carregando serviços do Firebase...', false);
+            window.addEventListener('firebase-services-ready', () => {
+                configureFirebaseServices(window.firebaseServices);
+            }, { once: true });
+        }
+
+        function configureFirebaseServices(services) {
+            if (!services) {
+                updateAuthStatusMessage('Firebase não configurado. Atualize as credenciais antes de usar.', true);
+                return;
+            }
+
+            if (firebaseConfigured && firebaseAuth === services.auth && firestore === services.db) {
+                bindAuthButtons(services);
+                return;
+            }
+
+            firebaseAuth = services.auth;
+            firestore = services.db;
+            firebaseConfigured = true;
+
+            bindAuthButtons(services);
+
+            services.onAuthStateChanged(firebaseAuth, handleAuthStateChange);
+            updateAuthUI();
+        }
+
+        function bindAuthButtons(services) {
+            const signInBtn = document.getElementById('loginBtn') || document.getElementById('googleSignInBtn');
+            if (signInBtn && !signInBtn.dataset.bound) {
+                signInBtn.addEventListener('click', () => handleSignIn(services));
+                signInBtn.dataset.bound = 'true';
+            }
+
+            const masterLoginBtn = document.getElementById('masterLoginBtn');
+            if (masterLoginBtn && !masterLoginBtn.dataset.bound) {
+                masterLoginBtn.addEventListener('click', () => handleSignIn(services, true));
+                masterLoginBtn.dataset.bound = 'true';
+            }
+
+            const signOutBtn = document.getElementById('signOutBtn');
+            if (signOutBtn && !signOutBtn.dataset.bound) {
+                signOutBtn.addEventListener('click', () => handleSignOut(services));
+                signOutBtn.dataset.bound = 'true';
+            }
+
+            const openMasterPanelBtn = document.getElementById('openMasterPanelBtn');
+            if (openMasterPanelBtn && !openMasterPanelBtn.dataset.bound) {
+                openMasterPanelBtn.addEventListener('click', () => {
+                    const masterTabButton = document.getElementById('masterTabButton');
+                    if (masterTabButton) {
+                        switchTab('mestre', masterTabButton);
+                        masterTabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                });
+                openMasterPanelBtn.dataset.bound = 'true';
+            }
+
+            const createCharacterBtn = document.getElementById('createCharacterBtn');
+            if (createCharacterBtn && !createCharacterBtn.dataset.bound) {
+                createCharacterBtn.addEventListener('click', () => createNewCharacter());
+                createCharacterBtn.dataset.bound = 'true';
+            }
+
+            const changeCharacterBtn = document.getElementById('changeCharacterBtn');
+            if (changeCharacterBtn && !changeCharacterBtn.dataset.bound) {
+                changeCharacterBtn.addEventListener('click', async () => {
+                    await forceAutoSave();
+                    try {
+                        await fetchUserCharacters();
+                    } catch (error) {
+                        console.error('Erro ao atualizar a lista de personagens:', error);
+                    }
+                    showCharacterSelection();
+                });
+                changeCharacterBtn.dataset.bound = 'true';
+            }
+        }
+
+        async function handleSignIn(services, goToMaster = false) {
+            if (!firebaseAuth || !services?.signInWithPopup || !services?.GoogleAuthProvider) {
+                updateAuthStatusMessage('Serviços de autenticação ainda não estão prontos. Aguarde um instante e tente novamente.', true);
+                return;
+            }
+
+            if (goToMaster) {
+                const password = prompt('Digite a senha do mestre para continuar:');
+                if (password === null) {
+                    updateAuthStatusMessage('Login do mestre cancelado.', false);
+                    return;
+                }
+
+                if (password !== MASTER_PASSWORD) {
+                    masterPasswordVerified = false;
+                    updateAuthStatusMessage('Senha do mestre incorreta.', true);
+                    return;
+                }
+
+                masterPasswordVerified = true;
+                shouldOpenMasterAfterLogin = true;
+            } else {
+                masterPasswordVerified = false;
+                shouldOpenMasterAfterLogin = false;
+            }
+
+            try {
+                const provider = new services.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                await services.signInWithPopup(firebaseAuth, provider);
+                updateAuthStatusMessage('Login realizado com sucesso!');
+            } catch (error) {
+                console.error('Erro no processo de login:', error);
+                if (goToMaster) {
+                    masterPasswordVerified = false;
+                    shouldOpenMasterAfterLogin = false;
+                }
+                updateAuthStatusMessage('Não foi possível concluir o login. Verifique as credenciais do Firebase.', true);
+            }
+        }
+
+        async function handleSignOut(services) {
+            try {
+                await services.signOut(firebaseAuth);
+                masterPasswordVerified = false;
+                updateAuthStatusMessage('Você saiu da conta.');
+            } catch (error) {
+                console.error('Erro ao sair da conta:', error);
+                updateAuthStatusMessage('Não foi possível encerrar a sessão.', true);
+            }
+        }
+
+        async function handleAuthStateChange(user) {
+            authUser = user;
+            isMasterUser = !!user && masterPasswordVerified;
+
+            if (!user) {
+                cleanupMasterSubscription();
+                cleanupLogsSubscription();
+                resetTabsAfterLogout();
+                userCharacters = [];
+                activeCharacterId = null;
+                masterPasswordVerified = false;
+                lastSyncedAt = null;
+                updateActiveCharacterDisplay();
+                renderCharacterSelection();
+                updateAuthUI();
+                updateAuthStatusMessage('Entre para sincronizar sua ficha.', false);
+                shouldOpenMasterAfterLogin = false;
+                return;
+            }
+
+            updateAuthUI();
+
+            if (isMasterUser) {
+                setupMasterSubscription();
+                setupLogsSubscription();
+                updateAuthStatusMessage('Painel do mestre ativo.');
+                if (shouldOpenMasterAfterLogin) {
+                    const masterTabButton = document.getElementById('masterTabButton');
+                    if (masterTabButton) {
+                        switchTab('mestre', masterTabButton);
+                        masterTabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }
+                shouldOpenMasterAfterLogin = false;
+                return;
+            }
+
+            cleanupMasterSubscription();
+            cleanupLogsSubscription();
+            shouldOpenMasterAfterLogin = false;
+            activeCharacterId = null;
+            lastSyncedAt = null;
+            updateActiveCharacterDisplay();
+
+            try {
+                await fetchUserCharacters();
+                updateAuthUI();
+            } catch (error) {
+                console.error('Erro ao carregar personagens do jogador:', error);
+                updateAuthStatusMessage('Não foi possível carregar seus personagens.', true);
+            }
+        }
+
+        function updateAuthUI() {
+            const appContainer = document.getElementById('appContainer');
+            const authCard = document.getElementById('authCard');
+            const userInfoCard = document.getElementById('userInfoCard');
+            const userNameEl = document.getElementById('userName');
+            const userEmailEl = document.getElementById('userEmail');
+            const masterBadge = document.getElementById('masterBadge');
+            const masterTabButton = document.getElementById('masterTabButton');
+            const openMasterPanelBtn = document.getElementById('openMasterPanelBtn');
+            const changeCharacterBtn = document.getElementById('changeCharacterBtn');
+            const characterSelectionCard = document.getElementById('characterSelectionCard');
+            const createCharacterBtn = document.getElementById('createCharacterBtn');
+
+            if (!appContainer || !authCard || !userInfoCard) return;
+
+            const hasActiveCharacter = !!activeCharacterId;
+            const showApp = !!authUser && (isMasterUser || hasActiveCharacter);
+
+            if (authUser) {
+                authCard.style.display = 'none';
+                userInfoCard.style.display = 'flex';
+                if (userNameEl) userNameEl.textContent = authUser.displayName || 'Jogador';
+                if (userEmailEl) userEmailEl.textContent = authUser.email || '';
+                if (masterBadge) masterBadge.style.display = isMasterUser ? 'inline-flex' : 'none';
+                if (masterTabButton) masterTabButton.style.display = isMasterUser ? 'inline-flex' : 'none';
+                if (openMasterPanelBtn) openMasterPanelBtn.style.display = isMasterUser ? 'inline-flex' : 'none';
+                if (changeCharacterBtn) changeCharacterBtn.style.display = (!isMasterUser && hasActiveCharacter) ? 'inline-flex' : 'none';
+                if (characterSelectionCard) characterSelectionCard.style.display = (!isMasterUser && !hasActiveCharacter) ? 'flex' : 'none';
+                if (createCharacterBtn) createCharacterBtn.style.display = (!isMasterUser && !hasActiveCharacter) ? 'block' : 'none';
+            } else {
+                authCard.style.display = 'block';
+                userInfoCard.style.display = 'none';
+                if (masterBadge) masterBadge.style.display = 'none';
+                if (masterTabButton) masterTabButton.style.display = 'none';
+                if (openMasterPanelBtn) openMasterPanelBtn.style.display = 'none';
+                if (changeCharacterBtn) changeCharacterBtn.style.display = 'none';
+                if (characterSelectionCard) characterSelectionCard.style.display = 'none';
+                if (createCharacterBtn) createCharacterBtn.style.display = 'none';
+            }
+
+            appContainer.style.display = showApp ? 'block' : 'none';
+
+            if (!isMasterUser && masterTabButton) {
+                masterTabButton.classList.remove('active');
+                const masterContent = document.getElementById('mestre');
+                if (masterContent) masterContent.classList.remove('active');
+            }
+
+            updateActiveCharacterDisplay();
+        }
+
+        function updateAuthStatusMessage(message, isError = false) {
+            const statusEl = document.getElementById('authStatusMessage');
+            if (!statusEl) return;
+            statusEl.textContent = message || '';
+            statusEl.style.color = isError ? 'var(--danger)' : '#94a3b8';
+        }
+
+        function sanitizeForFirestore(value) {
+            if (Array.isArray(value)) {
+                return value.map(item => sanitizeForFirestore(item === undefined ? null : item));
+            }
+
+            if (value && typeof value === 'object') {
+                return Object.entries(value).reduce((acc, [key, val]) => {
+                    if (val === undefined) {
+                        acc[key] = null;
+                    } else {
+                        acc[key] = sanitizeForFirestore(val);
+                    }
+                    return acc;
+                }, {});
+            }
+
+            if (typeof value === 'number' && !Number.isFinite(value)) {
+                return 0;
+            }
+
+            return value;
+        }
+
+        async function loadCharacterFromFirestore() {
+            if (!firestore || !authUser || !window.firebaseServices || !activeCharacterId) return false;
+
+            const services = window.firebaseServices;
+            const docRef = services.doc(firestore, FIRESTORE_COLLECTION, activeCharacterId);
+            const snapshot = await services.getDoc(docRef);
+
+            if (snapshot.exists()) {
+                const data = snapshot.data() || {};
+                const characterData = data.character || data;
+                applyCharacterData(characterData);
+
+                const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : null;
+                if (updatedAt) {
+                    lastSyncedAt = updatedAt;
+                    updateAuthStatusMessage(`Ficha carregada do Firebase em ${formatDateTime(updatedAt)}.`);
+                } else {
+                    updateAuthStatusMessage('Ficha carregada do Firebase.');
+                }
+
+                updateUserCharacterCache(activeCharacterId, characterData, updatedAt);
+                renderCharacterSelection();
+                return true;
+            }
+
+            updateAuthStatusMessage('Nenhuma ficha encontrada. Faça alterações para salvar no Firebase.', false);
+            return false;
+        }
+
+        function updateUserCharacterCache(id, data, updatedAt) {
+            if (!id) return;
+
+            const nameFromData = data && data.nome ? data.nome : undefined;
+            const normalizedEntry = {
+                id,
+                name: (nameFromData || character.nome || 'Sem nome') || 'Sem nome',
+                updatedAt: updatedAt instanceof Date ? updatedAt : null
+            };
+
+            const existingIndex = userCharacters.findIndex(item => item.id === id);
+            if (existingIndex >= 0) {
+                userCharacters[existingIndex] = {
+                    ...userCharacters[existingIndex],
+                    ...normalizedEntry
+                };
+            } else {
+                userCharacters.push(normalizedEntry);
+            }
+        }
+
+        async function fetchUserCharacters() {
+            if (!firestore || !authUser || !window.firebaseServices) {
+                userCharacters = [];
+                renderCharacterSelection();
+                return;
+            }
+
+            const services = window.firebaseServices;
+
+            try {
+                const collectionRef = services.collection(firestore, FIRESTORE_COLLECTION);
+                const userQuery = services.query(collectionRef, services.where('owner.uid', '==', authUser.uid));
+                const snapshot = await services.getDocs(userQuery);
+
+                userCharacters = snapshot.docs.map(docSnap => {
+                    const data = docSnap.data() || {};
+                    const charData = data.character || {};
+                    return {
+                        id: docSnap.id,
+                        name: charData.nome || 'Sem nome',
+                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null
+                    };
+                });
+
+                userCharacters.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+            } catch (error) {
+                console.error('Erro ao carregar personagens do jogador:', error);
+                userCharacters = [];
+                renderCharacterSelection();
+                throw error;
+            }
+
+            renderCharacterSelection();
+
+            if (userCharacters.length === 0) {
+                updateAuthStatusMessage('Nenhum personagem encontrado. Crie um novo para começar.');
+            } else {
+                updateAuthStatusMessage('Selecione um personagem para continuar.');
+            }
+        }
+
+        function renderCharacterSelection() {
+            const listEl = document.getElementById('characterList');
+            if (!listEl) return;
+
+            if (!authUser || isMasterUser) {
+                listEl.innerHTML = '';
+                return;
+            }
+
+            if (!userCharacters.length) {
+                listEl.innerHTML = '<div class="character-empty">Nenhum personagem encontrado.</div>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+
+            const sorted = [...userCharacters].sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+
+            sorted.forEach(characterInfo => {
+                const item = document.createElement('div');
+                item.className = 'character-item';
+
+                const info = document.createElement('div');
+                info.className = 'character-info';
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'character-name';
+                nameEl.textContent = characterInfo.name || 'Sem nome';
+
+                const metaEl = document.createElement('div');
+                metaEl.className = 'character-meta';
+                metaEl.textContent = characterInfo.updatedAt
+                    ? `Atualizado em ${formatDateTime(characterInfo.updatedAt)}`
+                    : 'Nunca sincronizado';
+
+                info.appendChild(nameEl);
+                info.appendChild(metaEl);
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = 'btn btn-primary btn-small';
+                actionBtn.textContent = 'Selecionar';
+                actionBtn.addEventListener('click', () => selectCharacter(characterInfo.id));
+
+                item.appendChild(info);
+                item.appendChild(actionBtn);
+
+                listEl.appendChild(item);
+            });
+        }
+
+        async function selectCharacter(characterId) {
+            if (!characterId) return;
+
+            activeCharacterId = characterId;
+            updateAuthUI();
+            updateAuthStatusMessage('Carregando personagem selecionado...');
+
+            try {
+                const loaded = await loadCharacterFromFirestore();
+                if (!loaded) {
+                    applyCharacterData(createDefaultCharacter());
+                    updateAuthStatusMessage('Novo personagem em branco pronto para edição.');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar o personagem selecionado:', error);
+                updateAuthStatusMessage('Não foi possível carregar o personagem selecionado.', true);
+            }
+
+            updateActiveCharacterDisplay();
+            updateAuthUI();
+        }
+
+        async function createNewCharacter() {
+            if (!authUser || !firestore || !window.firebaseServices) {
+                updateAuthStatusMessage('Faça login para criar personagens.', true);
+                return;
+            }
+
+            const nameInput = prompt('Nome do novo personagem:');
+            if (nameInput === null) {
+                return;
+            }
+
+            const baseCharacter = createDefaultCharacter();
+            baseCharacter.nome = nameInput.trim() || 'Novo Personagem';
+
+            try {
+                const services = window.firebaseServices;
+                const collectionRef = services.collection(firestore, FIRESTORE_COLLECTION);
+                const payload = {
+                    character: sanitizeForFirestore(baseCharacter),
+                    owner: {
+                        uid: authUser.uid,
+                        name: authUser.displayName || '',
+                        email: authUser.email || ''
+                    },
+                    createdAt: services.serverTimestamp(),
+                    updatedAt: services.serverTimestamp()
+                };
+
+                const docRef = await services.addDoc(collectionRef, payload);
+                await services.setDoc(services.doc(firestore, FIRESTORE_COLLECTION, docRef.id), {
+                    characterId: docRef.id
+                }, { merge: true });
+
+                activeCharacterId = docRef.id;
+                applyCharacterData(baseCharacter);
+                updateUserCharacterCache(activeCharacterId, baseCharacter, new Date());
+                renderCharacterSelection();
+                updateAuthUI();
+                updateAuthStatusMessage('Novo personagem criado! Todas as alterações serão sincronizadas automaticamente.');
+                showAlert('✅ Novo personagem criado!', 'success');
+            } catch (error) {
+                console.error('Erro ao criar novo personagem:', error);
+                updateAuthStatusMessage('Não foi possível criar o personagem. Tente novamente.', true);
+            }
+        }
+
+        function showCharacterSelection() {
+            if (!authUser || isMasterUser) return;
+            updateAuthStatusMessage('Selecione um personagem para continuar.');
+            activeCharacterId = null;
+            updateActiveCharacterDisplay();
+            updateAuthUI();
+        }
+
+        function updateActiveCharacterDisplay() {
+            const label = document.getElementById('activeCharacterLabel');
+            const nameEl = document.getElementById('activeCharacterName');
+
+            if (!label || !nameEl) return;
+
+            if (authUser && activeCharacterId) {
+                const displayName = character.nome && character.nome.trim() ? character.nome.trim() : 'Sem nome';
+                nameEl.textContent = displayName;
+                label.style.display = 'block';
+            } else {
+                nameEl.textContent = '';
+                label.style.display = 'none';
+            }
+        }
+
+        function setupMasterSubscription() {
+            if (!isMasterUser || !firestore || !window.firebaseServices) return;
+            if (typeof masterUnsubscribe === 'function') return;
+
+            const services = window.firebaseServices;
+            const collectionRef = services.collection(firestore, FIRESTORE_COLLECTION);
+
+            masterUnsubscribe = services.onSnapshot(collectionRef, (snapshot) => {
+                const characters = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data() || {};
+                    const charData = data.character || {};
+                    characters.push({
+                        id: docSnap.id,
+                        name: charData.nome || 'Sem nome',
+                        player: charData.jogador || '',
+                        ownerName: data.owner?.name || '',
+                        email: data.owner?.email || '',
+                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+                        raw: charData
+                    });
+                });
+
+                renderMasterPanel(characters);
+            }, (error) => {
+                console.error('Erro ao acompanhar fichas:', error);
+                updateAuthStatusMessage('Erro ao atualizar o painel do mestre.', true);
+            });
+        }
+
+        function cleanupMasterSubscription() {
+            if (typeof masterUnsubscribe === 'function') {
+                masterUnsubscribe();
+                masterUnsubscribe = null;
+            }
+
+            const masterList = document.getElementById('masterCharacterList');
+            if (masterList) masterList.innerHTML = '';
+        }
+
+        function setupLogsSubscription() {
+            if (!isMasterUser || !firestore || !window.firebaseServices) return;
+            if (typeof logsUnsubscribe === 'function') return;
+
+            const { collection: collectionFn, query: queryFn, orderBy: orderByFn, onSnapshot: onSnapshotFn } = window.firebaseServices;
+            const logsQuery = queryFn(collectionFn(firestore, 'logs'), orderByFn('timestamp', 'desc'));
+
+            logsUnsubscribe = onSnapshotFn(logsQuery, (snapshot) => {
+                const container = document.getElementById('masterLogList');
+                if (!container) return;
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="master-empty">Nenhum log registrado ainda.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data() || {};
+                    const time = data.timestamp?.toDate ? data.timestamp.toDate().toLocaleString('pt-BR') : '—';
+                    const card = document.createElement('div');
+                    card.classList.add('master-card');
+                    const displayName = data.userName || data.userId || 'Jogador';
+                    const characterLabel = data.characterName || data.characterId || '(Sem nome)';
+                    const changesJson = escapeHtml(JSON.stringify(data.changes || {}, null, 2));
+
+                    card.innerHTML = `
+                        <h3>${escapeHtml(characterLabel)}</h3>
+                        <p><strong>Jogador:</strong> ${escapeHtml(displayName)}</p>
+                        <p><strong>Data:</strong> ${escapeHtml(time)}</p>
+                        <details><summary>Ver alterações</summary><pre>${changesJson}</pre></details>
+                    `;
+
+                    container.appendChild(card);
+                });
+            }, (error) => {
+                console.error('Erro ao acompanhar logs de alterações:', error);
+            });
+        }
+
+        function cleanupLogsSubscription() {
+            if (typeof logsUnsubscribe === 'function') {
+                logsUnsubscribe();
+                logsUnsubscribe = null;
+            }
+
+            const container = document.getElementById('masterLogList');
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+
+        function renderMasterPanel(characters) {
+            const listEl = document.getElementById('masterCharacterList');
+            if (!listEl) return;
+
+            if (!characters || characters.length === 0) {
+                listEl.innerHTML = '<div class="master-empty">Nenhuma ficha sincronizada ainda.</div>';
+                return;
+            }
+
+            const sorted = [...characters].sort((a, b) => {
+                const timeA = a.updatedAt ? a.updatedAt.getTime() : 0;
+                const timeB = b.updatedAt ? b.updatedAt.getTime() : 0;
+                return timeB - timeA;
+            });
+
+            listEl.innerHTML = sorted.map(characterInfo => {
+                const ownerDisplay = characterInfo.ownerName || characterInfo.player || 'Jogador';
+                const emailInfo = characterInfo.email ? ` (${escapeHtml(characterInfo.email)})` : '';
+                const updatedInfo = characterInfo.updatedAt ? formatDateTime(characterInfo.updatedAt) : 'Sem data';
+                const rawData = escapeHtml(JSON.stringify(characterInfo.raw, null, 2));
+
+                return `
+                    <div class="master-card">
+                        <h3>${escapeHtml(characterInfo.name)}</h3>
+                        <p><strong>Jogador:</strong> ${escapeHtml(ownerDisplay)}${emailInfo}</p>
+                        <p><strong>Atualizado:</strong> ${updatedInfo}</p>
+                        <details>
+                            <summary>Ver ficha completa</summary>
+                            <pre>${rawData}</pre>
+                        </details>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatDateTime(date) {
+            if (!(date instanceof Date)) return '';
+            return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function escapeHtml(value) {
+            if (value === undefined || value === null) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function resetTabsAfterLogout() {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            const basicoTab = document.querySelector('.tab[onclick*="basico"]');
+            const basicoContent = document.getElementById('basico');
+            if (basicoTab) basicoTab.classList.add('active');
+            if (basicoContent) basicoContent.classList.add('active');
         }
 
         function setupEventListeners() {
@@ -2120,10 +3107,17 @@ Exemplos:
             Object.entries(inputs).forEach(([id, key]) => {
                 const el = document.getElementById(id);
                 el.addEventListener('change', (e) => {
-                    character[key] = ['idade', 'tamanho', 'luns'].includes(key) 
-                        ? parseInt(e.target.value) || 0 
+                    character[key] = ['idade', 'tamanho', 'luns'].includes(key)
+                        ? parseInt(e.target.value) || 0
                         : e.target.value;
                     if (key === 'tamanho') updateAllCalculations();
+                    if (key === 'nome') {
+                        updateActiveCharacterDisplay();
+                        if (activeCharacterId) {
+                            updateUserCharacterCache(activeCharacterId, character, lastSyncedAt);
+                            renderCharacterSelection();
+                        }
+                    }
                     autoSave();
                 });
             });
@@ -2135,20 +3129,162 @@ Exemplos:
         }
 
         // ============= AUTO-SAVE =============
-        let autoSaveTimeout;
-        function autoSave() {
-            clearTimeout(autoSaveTimeout);
+        const inputAutoSaveTimers = new WeakMap();
+        let scheduledAutoSaveTimer = null;
+        let currentAutoSavePromise = null;
+        let autoSaveListenersBound = false;
+
+        function collectFormData() {
+            return sanitizeForFirestore(character);
+        }
+
+        function showAutosaveIndicator() {
             const indicator = document.getElementById('autosaveIndicator');
+            if (!indicator) return;
             indicator.classList.add('show');
-            
-            autoSaveTimeout = setTimeout(() => {
+
+            if (indicator.hideTimeout) {
+                clearTimeout(indicator.hideTimeout);
+            }
+
+            indicator.hideTimeout = setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function scheduleAutoSave(delay = 500) {
+            if (scheduledAutoSaveTimer) {
+                clearTimeout(scheduledAutoSaveTimer);
+            }
+
+            scheduledAutoSaveTimer = setTimeout(() => {
+                scheduledAutoSaveTimer = null;
+                autoSaveCharacter();
+            }, delay);
+        }
+
+        function clearInputAutoSaveTimer(element) {
+            if (!element) return;
+            const timer = inputAutoSaveTimers.get(element);
+            if (timer) {
+                clearTimeout(timer);
+                inputAutoSaveTimers.delete(element);
+            }
+        }
+
+        async function forceAutoSave() {
+            if (scheduledAutoSaveTimer) {
+                clearTimeout(scheduledAutoSaveTimer);
+                scheduledAutoSaveTimer = null;
+            }
+
+            return autoSaveCharacter();
+        }
+
+        async function autoSaveCharacter() {
+            if (!authUser || !firestore || !activeCharacterId || !window.firebaseServices) {
+                return;
+            }
+
+            if (currentAutoSavePromise) {
+                return currentAutoSavePromise;
+            }
+
+            const { doc: docRefFn, setDoc: setDocFn, collection: collectionFn, addDoc: addDocFn, serverTimestamp: serverTimestampFn } = window.firebaseServices;
+            const characterRef = docRefFn(firestore, FIRESTORE_COLLECTION, activeCharacterId);
+            const formData = collectFormData();
+            const timestamp = serverTimestampFn();
+
+            showAutosaveIndicator();
+
+            const savePromise = (async () => {
                 try {
-                    localStorage.setItem('lendasReliquia_character', JSON.stringify(character));
-                } catch(e) {
-                    console.error('Erro ao salvar:', e);
+                    const payload = {
+                        character: formData,
+                        owner: {
+                            uid: authUser.uid,
+                            name: authUser.displayName || '',
+                            email: authUser.email || ''
+                        },
+                        characterId: activeCharacterId,
+                        updatedAt: timestamp
+                    };
+
+                    await setDocFn(characterRef, payload, { merge: true });
+
+                    let logFailed = false;
+                    try {
+                        const logEntry = {
+                            userId: authUser.uid,
+                            userName: authUser.displayName || authUser.email || 'Jogador',
+                            characterId: activeCharacterId,
+                            characterName: formData?.nome || 'Sem nome',
+                            timestamp: serverTimestampFn(),
+                            changes: formData
+                        };
+
+                        await addDocFn(collectionFn(firestore, 'logs'), logEntry);
+                    } catch (logError) {
+                        logFailed = true;
+                        console.error('Erro ao registrar log de alterações:', logError);
+                    }
+
+                    lastSyncedAt = new Date();
+                    const message = `Auto-salvo em ${formatDateTime(lastSyncedAt)}.`;
+                    updateAuthStatusMessage(logFailed ? `${message} Não foi possível registrar o log.` : message, logFailed);
+                    updateUserCharacterCache(activeCharacterId, character, lastSyncedAt);
+                    renderCharacterSelection();
+                } catch (error) {
+                    console.error('Erro ao salvar automaticamente no Firebase:', error);
+                    updateAuthStatusMessage('Erro ao salvar automaticamente no Firebase.', true);
+                    throw error;
                 }
-                setTimeout(() => indicator.classList.remove('show'), 1000);
-            }, 500);
+            })();
+
+            currentAutoSavePromise = savePromise;
+
+            try {
+                await savePromise;
+            } finally {
+                currentAutoSavePromise = null;
+            }
+
+            return savePromise;
+        }
+
+        function autoSave(force = false) {
+            if (force) {
+                return forceAutoSave();
+            }
+
+            scheduleAutoSave(500);
+        }
+
+        function setupGlobalAutosaveListeners() {
+            if (autoSaveListenersBound) return;
+            autoSaveListenersBound = true;
+
+            document.addEventListener('change', (event) => {
+                const target = event.target;
+                if (!target || typeof target.matches !== 'function') return;
+                if (!target.matches('input, select, textarea')) return;
+
+                clearInputAutoSaveTimer(target);
+                forceAutoSave();
+            });
+
+            document.addEventListener('input', (event) => {
+                const target = event.target;
+                if (!target || typeof target.matches !== 'function') return;
+                if (!target.matches('input, select, textarea')) return;
+
+                clearInputAutoSaveTimer(target);
+                const timer = setTimeout(() => {
+                    inputAutoSaveTimers.delete(target);
+                    autoSaveCharacter();
+                }, 1500);
+                inputAutoSaveTimers.set(target, timer);
+            });
         }
 
         // ============= CRIAR DOTS =============
@@ -2683,21 +3819,27 @@ Exemplos:
         }
 
         // ============= TABS =============
-        function switchTab(tabName) {
+        function switchTab(tabName, triggerElement = null) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            const targetTab = document.querySelector(`.tab-content[id="${tabName}"]`);
-            
+
+            const targetTab = document.getElementById(tabName);
+
             if (!targetTab) {
                 console.error('❌ Aba não encontrada:', tabName);
                 return;
             }
-            
-            event.target.classList.add('active');
+
+            const tabButton = triggerElement || document.querySelector(`.tab[onclick*="${tabName}"]`);
+
+            if (tabButton) {
+                tabButton.classList.add('active');
+                if (typeof tabButton.scrollIntoView === 'function') {
+                    tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            }
+
             targetTab.classList.add('active');
-            
-            event.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
         // ============= CARREGAR DADOS =============
@@ -2750,17 +3892,9 @@ Exemplos:
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     try {
-                        character = JSON.parse(event.target.result);
-                        
-                        if (!character.containers) character.containers = [];
-                        if (!character.skillInputs) character.skillInputs = {};
-                        if (!character.notas) character.notas = '';
-                        if (!character.classAbilities) character.classAbilities = {};
-                        if (!character.classResources) character.classResources = {};
-                        
-                        loadCharacterData();
-                        updateAllCalculations();
-                        autoSave();
+                        const imported = JSON.parse(event.target.result);
+                        applyCharacterData(imported);
+                        forceAutoSave();
                         showAlert('✅ Personagem importado com sucesso!', 'success');
                     } catch (error) {
                         showAlert('❌ Erro ao importar arquivo! Verifique se é um JSON válido.', 'danger');
@@ -2772,11 +3906,18 @@ Exemplos:
         }
 
         function resetCharacter() {
+            if (!authUser || !activeCharacterId) {
+                showAlert('Faça login e selecione um personagem antes de iniciar um novo.', 'danger');
+                updateAuthStatusMessage('Entre e escolha um personagem para salvar na nuvem.', true);
+                return;
+            }
+
             if (confirm('⚠️ ATENÇÃO! Criar um novo personagem irá APAGAR o personagem atual permanentemente. Deseja continuar?')) {
                 if (confirm('⚠️ ÚLTIMA CONFIRMAÇÃO! Todos os dados serão perdidos. Tem certeza ABSOLUTA?')) {
-                    localStorage.removeItem('lendasReliquia_character');
-                    showAlert('🔄 Personagem resetado! Recarregando...', 'success');
-                    setTimeout(() => location.reload(), 1500);
+                    applyCharacterData(createDefaultCharacter());
+                    updateActiveCharacterDisplay();
+                    forceAutoSave();
+                    showAlert('🔄 Personagem resetado! Dados limpos no Firebase.', 'success');
                 }
             }
         }
@@ -2796,7 +3937,7 @@ Exemplos:
         }
 
         // ============= INICIAR =============
-        window.onload = init;
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>
